@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
-use Database\Factories\ProductFactory;
+use Database\Factories\BadgeVerificationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['idProduct', 'idStore', 'productName', 'description', 'weightGram', 'productStatus', 'avgRating', 'sold'])]
-class Product extends Model
+#[Fillable(['idBadge', 'idStore', 'badgeType', 'reviewDate', 'requestDate', 'endDate', 'status', 'notes'])]
+class BadgeVerification extends Model
 {
-    /** @use HasFactory<ProductFactory> */
+    /** @use HasFactory<BadgeVerificationFactory> */
     use HasFactory;
 
-    protected $primaryKey = 'idProduct';
+    protected $primaryKey = 'idBadge';
     public $incrementing = false;
     protected $keyType = 'string';
 

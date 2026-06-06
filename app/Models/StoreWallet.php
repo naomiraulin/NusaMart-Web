@@ -2,23 +2,25 @@
 
 namespace App\Models;
 
-use Database\Factories\ProductFactory;
+use Database\Factories\StoreWalletFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['idProduct', 'idStore', 'productName', 'description', 'weightGram', 'productStatus', 'avgRating', 'sold'])]
-class Product extends Model
+#[Fillable(['idWallet', 'idStore', 'activeBalance', 'outstandingBalance'])]
+class StoreWallet extends Model
 {
-    /** @use HasFactory<ProductFactory> */
+    /** @use HasFactory<StoreWalletFactory> */
     use HasFactory;
 
-    protected $primaryKey = 'idProduct';
+    // --- Konfigurasi Custom Tabel Store Wallets ---
+    protected $primaryKey = 'idWallet';
     public $incrementing = false;
     protected $keyType = 'string';
 
     const CREATED_AT = 'createAt';
     const UPDATED_AT = 'updateAt';
+    // ---------------------------------------------
 
     /**
      * Relasi Balik ke Model Store

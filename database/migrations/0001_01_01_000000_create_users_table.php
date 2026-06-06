@@ -12,13 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+            $table->string('idUser')->primary();
+            $table->string('username');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
+            $table->string('phone')->nullable();
+            $table->enum('role', ['BUYER', 'SELLER', 'ADMIN'])->default('BUYER');
+            $table->string('imageURL')->nullable(); // Sudah diubah menjadi String
+            
+            $table->dateTime('createAt')->nullable();
+            $table->dateTime('updateAt')->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -29,7 +32,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->string('idUser')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
