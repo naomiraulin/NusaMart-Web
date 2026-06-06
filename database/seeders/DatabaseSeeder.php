@@ -32,9 +32,21 @@ class DatabaseSeeder extends Seeder
             CartSeeder::class,
             CartItemSeeder::class,
             PaymentMethodSeeder::class,
-            PaymentMethodSeeder::class,
             StoreWalletSeeder::class,
             WithdrawalSeeder::class,
+            CourierOptionSeeder::class,
+            PaymentSeeder::class,
+            OrderSeeder::class,
+            OrderItemSeeder::class,
+            ShippingSeeder::class,
+            ShippingTrackingSeeder::class,
+            WalletTransactionSeeder::class,
+            ReviewSeeder::class,
+            ReviewImageSeeder::class,
+            RoomChatSeeder::class,
+            ChatSeeder::class,
+            NotificationSeeder::class,
+            ReportSeeder::class,
         ]);
     }
 }

@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\OrderFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+#[Fillable(['idOrder', 'idUser', 'idStore', 'productTotalPrice', 'shippingCost', 'servicePrice', 'grandTotal', 'orderStatus', 'invoiceNumber', 'idAddress', 'orderDate', 'arrivedDate', 'buyerNote', 'paymentId'])]
+class Order extends Model
+{
+    /** @use HasFactory<OrderFactory> */
+    use HasFactory;
+
+    protected $primaryKey = 'idOrder';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    const CREATED_AT = 'createAt';
+    const UPDATED_AT = 'updateAt';
+
+    // Relasi ke User
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'idUser', 'idUser');
+    }
+
+    // Relasi ke Store
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'idStore', 'idStore');
+    }
+
+    // Relasi ke UserAddress
+    public function address()
+    {
+        return $this->belongsTo(UserAddress::class, 'idAddress', 'idAddress');
+    }
+}
