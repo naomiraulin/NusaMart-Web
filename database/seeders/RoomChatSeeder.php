@@ -19,7 +19,7 @@ class RoomChatSeeder extends Seeder
                 // Simulasikan tidak semua pembeli pernah nge-chat (misal hanya 60%)
                 if (rand(1, 100) <= 60) {
                     // Ambil 1-2 penjual acak untuk diajak chat oleh pembeli ini
-                    $randomSellers = $sellers->random(rand(1, 2));
+                    $randomSellers = $sellers->random(rand(1, min(2, $sellers->count())));
 
                     foreach ($randomSellers as $seller) {
                         RoomChat::factory()->create([

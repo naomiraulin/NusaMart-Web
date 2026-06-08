@@ -3,16 +3,15 @@
 namespace Database\Factories;
 
 use App\Models\ProductSubCategory;
+use App\Services\IdGeneratorService;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class ProductSubCategoryFactory extends Factory
 {
     public function definition(): array
     {
         return [
-            'idProductSubCat' => Str::uuid()->toString(),
-            // idProduct dan idSubCategory akan disuntikkan dari Seeder
+            'idProductSubCat' => app(IdGeneratorService::class)->generate('PSC', ProductSubCategory::class, 'idProductSubCat'),
         ];
     }
 }

@@ -12,23 +12,21 @@ class OrderItemSeeder extends Seeder
     public function run(): void
     {
         $orders = Order::all();
-        // Ambil item produk beserta relasi induknya (Product) agar bisa mengambil nama produk
         $productItems = ProductItem::with('product')->get();
 
         if ($orders->count() > 0 && $productItems->count() > 0) {
             foreach ($orders as $order) {
-                // Setiap pesanan berisi 1 hingga 3 macam barang
-                $randomItems = $productItems->random(rand(1, 3));
-                
+                $maxItems = min(3, $productItems->count());
+                $randomItems = $productItems->random(rand(1, $maxItems));
+
                 foreach ($randomItems as $item) {
-                    // Ambil nama dari relasi tabel Product
                     $productName = $item->product ? $item->product->productName : 'Produk UMKM Lokal';
 
                     OrderItem::factory()->create([
-                        'idOrder' => $order->idOrder,
-                        'idItem' => $item->idItem,
-                        'nameSnapshot' => $productName,       // Snapshot nama aktual
-                        'priceSnapshot' => $item->price,      // Snapshot harga aktual
+                        'idOrder'       => $order->idOrder,
+                        'idItem'        => $item->idItem,
+                        'nameSnapshot'  => $productName,
+                        'priceSnapshot' => $item->price,
                     ]);
                 }
             }

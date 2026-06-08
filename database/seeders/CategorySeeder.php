@@ -3,38 +3,38 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\SubCategory;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        // Kategori spesifik untuk UMKM
-        $umkmCategories = [
-            'Kerajinan Tangan',
-            'Makanan & Minuman Lokal',
-            'Pakaian Tradisional',
-            'Kesehatan & Herbal',
-            'Perabotan Kayu',
-            'Aksesoris Etnik',
-            'Bahan Pangan Mentah',
-            'Produk Daur Ulang'
+        $categories = [
+            ['id' => 'CAT-000001', 'name' => 'Makanan & Minuman', 'subs' => ['Makanan Ringan', 'Minuman', 'Bumbu & Rempah']],
+            ['id' => 'CAT-000002', 'name' => 'Fashion',           'subs' => ['Pakaian Pria', 'Pakaian Wanita', 'Aksesoris']],
+            ['id' => 'CAT-000003', 'name' => 'Kerajinan Tangan',  'subs' => ['Anyaman', 'Ukiran', 'Batik']],
+            ['id' => 'CAT-000004', 'name' => 'Pertanian',         'subs' => ['Sayuran', 'Buah-buahan', 'Rempah']],
         ];
 
-        // Format ID berurutan agar rapi (opsional, bisa pakai UUID jika mau)
-        $idCounter = 1;
+        $subCounter = 1;
 
-        foreach ($umkmCategories as $categoryName) {
+        foreach ($categories as $cat) {
             Category::create([
-                'idCategory' => 'CAT-' . str_pad($idCounter, 3, '0', STR_PAD_LEFT), // Hasil: CAT-001, CAT-002, dll.
-                'categoryName' => $categoryName,
-                'isActive' => true,
+                'idCategory'   => $cat['id'],
+                'categoryName' => $cat['name'],
+                'isActive'     => true,
             ]);
-            $idCounter++;
-        }
 
-        // Jika butuh kategori acak tambahan, bisa aktifkan baris di bawah ini:
-        // Category::factory(5)->create();
+            foreach ($cat['subs'] as $subName) {
+                SubCategory::create([
+                    'idSubCategory'   => 'SUB-' . str_pad($subCounter, 6, '0', STR_PAD_LEFT),
+                    'idCategory'      => $cat['id'],
+                    'subCategoryName' => $subName,
+                    'description'     => null,
+                ]);
+                $subCounter++;
+            }
+        }
     }
 }

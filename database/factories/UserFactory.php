@@ -3,35 +3,28 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
-/**
- * @extends Factory<User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
+        $role = fake()->randomElement(['BUYER', 'SELLER']);
+
         return [
-            'idUser' => Str::uuid()->toString(),
+            'idUser'   => app(UserService::class)->generateUserId($role),
             'username' => fake()->userName(),
-            'email' => fake()->unique()->safeEmail(),
+            'email'    => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
-            'phone' => fake()->phoneNumber(),
-            'role' => fake()->randomElement(['BUYER', 'SELLER']),
-            'imageURL' => fake()->imageUrl(640, 480, 'people', true), // Menghasilkan teks URL gambar acak
+            'phone'    => fake()->phoneNumber(),
+            'role'     => $role,
+            'imageURL' => null,
+            'createAt' => now(),
+            'updateAt' => now(),
         ];
     }
 }

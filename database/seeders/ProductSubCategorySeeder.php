@@ -18,7 +18,7 @@ class ProductSubCategorySeeder extends Seeder
         if ($subCategories->count() > 0) {
             foreach ($products as $product) {
                 // Berikan setiap produk 1 sampai 2 sub-kategori acak
-                $randomSubCats = $subCategories->random(rand(1, 2));
+                $randomSubCats = $subCategories->random(rand(1, min(2, $subCategories->count())));
                 
                 foreach ($randomSubCats as $subCat) {
                     ProductSubCategory::factory()->create([

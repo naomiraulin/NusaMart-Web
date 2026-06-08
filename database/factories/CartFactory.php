@@ -3,16 +3,15 @@
 namespace Database\Factories;
 
 use App\Models\Cart;
+use App\Services\IdGeneratorService;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class CartFactory extends Factory
 {
     public function definition(): array
     {
         return [
-            'idCart' => Str::uuid()->toString(),
-            // idUser akan diisi melalui Seeder
+            'idCart' => app(IdGeneratorService::class)->generate('CRT', Cart::class, 'idCart'),
         ];
     }
 }

@@ -17,36 +17,33 @@ class ReportSeeder extends Seeder
         $reviews = Review::all();
 
         if ($users->count() > 0) {
-            // Ambil beberapa user acak sebagai pelapor
-            $reporters = $users->random(3);
+            // Fix: min() agar tidak error kalau user < 3
+            $reporters = $users->random(min(3, $users->count()));
 
             foreach ($reporters as $reporter) {
-                // 1. Laporan terhadap Produk
                 if ($products->count() > 0) {
                     Report::factory()->create([
-                        'reporterId' => $reporter->idUser,
-                        'type' => 'product',
+                        'reporterId'  => $reporter->idUser,
+                        'type'        => 'product',
                         'referenceId' => $products->random()->idProduct,
-                        'reason' => 'Produk ini sepertinya barang tiruan/palsu.',
+                        'reason'      => 'Produk ini sepertinya barang tiruan/palsu.',
                     ]);
                 }
 
-                // 2. Laporan terhadap Review
                 if ($reviews->count() > 0) {
                     Report::factory()->create([
-                        'reporterId' => $reporter->idUser,
-                        'type' => 'review',
+                        'reporterId'  => $reporter->idUser,
+                        'type'        => 'review',
                         'referenceId' => $reviews->random()->idReview,
-                        'reason' => 'Ulasan mengandung kata-kata yang tidak pantas.',
+                        'reason'      => 'Ulasan mengandung kata-kata yang tidak pantas.',
                     ]);
                 }
 
-                // 3. Laporan Umum (Others)
                 Report::factory()->create([
-                    'reporterId' => $reporter->idUser,
-                    'type' => 'others',
+                    'reporterId'  => $reporter->idUser,
+                    'type'        => 'others',
                     'referenceId' => null,
-                    'reason' => 'Saya menemukan bug saat checkout pesanan.',
+                    'reason'      => 'Saya menemukan bug saat checkout pesanan.',
                 ]);
             }
         }

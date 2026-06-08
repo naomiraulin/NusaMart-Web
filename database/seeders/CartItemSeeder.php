@@ -14,14 +14,13 @@ class CartItemSeeder extends Seeder
         $carts = Cart::all();
         $productItems = ProductItem::all();
 
-        // Pastikan ada produk sebelum mengisi keranjang
         if ($productItems->count() > 0) {
             foreach ($carts as $cart) {
-                // Beri simulasi bahwa 60% user memasukkan barang ke keranjang
                 if (rand(1, 100) <= 60) {
-                    // Masukkan 1 sampai 4 item berbeda ke dalam keranjang user ini
-                    $randomItems = $productItems->random(rand(1, 4));
-                    
+                    // Ambil max sesuai jumlah produk yang tersedia
+                    $maxItems = min(4, $productItems->count());
+                    $randomItems = $productItems->random(rand(1, $maxItems));
+
                     foreach ($randomItems as $item) {
                         CartItem::factory()->create([
                             'idCart' => $cart->idCart,
