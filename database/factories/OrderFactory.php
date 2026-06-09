@@ -15,7 +15,7 @@ class OrderFactory extends Factory
         $productTotal = fake()->randomFloat(2, 50000, 1000000);
         $shipping     = fake()->randomFloat(2, 10000, 50000);
         $service      = 2500;
-        $granTotal    = $productTotal + $shipping + $service; // granTotal, bukan grandTotal
+        $grandTotal    = $productTotal + $shipping + $service; 
 
         $status    = fake()->randomElement(['PENDING', 'PROCESSED', 'SHIPPED', 'DELIVERED', 'CANCELLED']);
         $orderDate = fake()->dateTimeBetween('-1 month', 'now');
@@ -26,7 +26,7 @@ class OrderFactory extends Factory
             'productTotalPrice' => $productTotal,
             'shippingCost'      => $shipping,
             'servicePrice'      => $service,
-            'granTotal'         => $granTotal, // sesuai kolom di DB
+            'grandTotal'        => $grandTotal,
             'orderStatus'       => $status,
             'invoiceNumber'     => 'INV/' . date('Ymd') . '/' . strtoupper(Str::random(6)),
             'orderDate'         => $orderDate,

@@ -14,7 +14,6 @@ class SellerFactory extends Factory
             'nik'           => fake()->numerify('################'),
             'bankName'      => fake()->randomElement(['BCA', 'Mandiri', 'BNI', 'BRI', 'BSI']),
             'accountNumber' => fake()->bankAccountNumber(),
-            'ktpPhoto'      => null,
             'createAt'      => now(),
             'updateAt'      => now(),
         ];

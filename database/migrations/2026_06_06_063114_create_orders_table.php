@@ -20,7 +20,7 @@ return new class extends Migration
             $table->double('productTotalPrice');
             $table->double('shippingCost');
             $table->double('servicePrice');
-            $table->double('grandTotal'); // Typo diperbaiki dari granTotal
+            $table->double('grandTotal');
             
             // Status dan Info
             $table->enum('orderStatus', ['PENDING', 'PROCESSED', 'SHIPPED', 'DELIVERED', 'CANCELLED'])->default('PENDING');

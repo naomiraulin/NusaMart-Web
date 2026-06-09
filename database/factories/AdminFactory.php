@@ -16,11 +16,12 @@ class AdminFactory extends Factory
      * @return array<string, mixed>
      */
     public function definition(): array
-    {
-        return [
-            // idAdmin dikosongkan karena akan diisi oleh Seeder
-            'division' => fake()->randomElement(['Customer Service', 'Finance', 'Technical Support', 'Content Moderator']),
-            'accessLevel' => fake()->randomElement(['Superadmin', 'Manager', 'Staff']),
-        ];
-    }
+{
+    return [
+        'division'    => fake()->randomElement(['Customer Service', 'Finance', 'Technical Support', 'Content Moderator']),
+        'accessLevel' => fake()->randomElement(['Superadmin', 'Manager', 'Staff']),
+        'createAt'    => now(),
+        'updateAt'    => now(),
+    ];
+}
 }
