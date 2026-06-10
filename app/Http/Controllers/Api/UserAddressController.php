@@ -130,4 +130,37 @@ class UserAddressController extends Controller
             'address' => $address,
         ]);
     }
+
+    // GET /api/user/{id}
+    public function show($id)
+    {
+        // Pastikan model User sudah di-import: use App\Models\User;
+        // Dan pastikan relasi 'seller' sudah didefinisikan di model User
+        $user = \App\Models\User::where('idUser', $id)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+
+        $data = [
+            'idUser'   => $user->idUser,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'phone'    => $user->phone,
+            'role'     => $user->role,
+            'imageURL' => $user->imageURL,
+            'createAt' => $user->createAt,
+        ];
+
+        if ($user->role === 'SELLER') {
+            $seller = $user->seller; // Memanggil relasi
+            $data['seller'] = $seller ? [
+                'nik'           => $seller->nik,
+                'bankName'      => $seller->bankName,
+                'accountNumber' => $seller->accountNumber,
+            ] : null;
+        }
+
+        return response()->json($data);
+    }
 }
