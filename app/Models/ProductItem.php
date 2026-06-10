@@ -25,4 +25,9 @@ class ProductItem extends Model
     {
         return $this->belongsTo(Product::class, 'idProduct', 'idProduct');
     }
+
+    public function productVariations()
+    {
+        return $this->hasMany(ProductVariation::class, 'idItem', 'idItem');
+    }
 }

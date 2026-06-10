@@ -6,15 +6,24 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserAddressController;
 use App\Http\Controllers\Api\StoreController;
+use App\Http\Controllers\Api\SellerProductController;
 
 // Public
+Route::get('/products',                          [ProductController::class, 'index']);
+Route::get('/products/search',                   [ProductController::class, 'search']);
+Route::get('/products/{id}',                     [ProductController::class, 'show']);
+Route::get('/products/store/{storeId}',          [ProductController::class, 'byStore']);
+Route::get('/categories',                        [ProductController::class, 'categories']);
+Route::get('/categories/{id}/subcategories',     [ProductController::class, 'subCategories']);
 
+Route::get('/stores', [StoreController::class, 'index']);
 
-// Public routes
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);
 });
+
+
 
 Route::get('/stores/{id}', [StoreController::class, 'show']);
 
@@ -46,6 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('seller')->group(function () {
             Route::get('/store',  [StoreController::class, 'myStore']);
             Route::put('/store',  [StoreController::class, 'update']);
+            Route::post('/products',                 [SellerProductController::class, 'store']);
+            Route::put('/products/{id}',             [SellerProductController::class, 'update']);
+            Route::delete('/products/{id}',          [SellerProductController::class, 'destroy']);
+            Route::post('/products/{id}/variations', [SellerProductController::class, 'addVariation']);
         });
 
     });

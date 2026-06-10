@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class StoreController extends Controller
 {
+    // GET /api/stores → list semua toko
+    public function index()
+    {   
+        $stores = Store::all();
+        return response()->json($stores);
+    }
     // GET /api/stores/{id}
     public function show(string $id)
     {

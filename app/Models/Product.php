@@ -21,10 +21,30 @@ class Product extends Model
     const UPDATED_AT = 'updateAt';
 
     /**
-     * Relasi Balik ke Model Store
+     * Relasie
      */
     public function store()
     {
         return $this->belongsTo(Store::class, 'idStore', 'idStore');
+    }
+
+    public function productItems()
+    {
+        return $this->hasMany(ProductItem::class, 'idProduct', 'idProduct');
+    }
+
+    public function productImages()
+    {
+        return $this->hasMany(ProductImage::class, 'idProduct', 'idProduct');
+    }
+
+    public function subCategories()
+    {
+        return $this->belongsToMany(
+            SubCategory::class,
+            'product_sub_categories',
+            'idProduct',
+            'idSubCategory'
+        );
     }
 }

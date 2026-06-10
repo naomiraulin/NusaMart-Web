@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Product;
 use App\Models\ProductItem;
 use Illuminate\Database\Seeder;
 
@@ -10,13 +9,131 @@ class ProductItemSeeder extends Seeder
 {
     public function run(): void
     {
-        $products = Product::all();
+        $productItems = [
+            [
+                'idItem'    => 'ITM-000001',
+                'idProduct' => 'PRD-000002',
+                'sku'       => 'BTK-SL-M',
+                'stock'     => 15,
+                'price'     => 150000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000002',
+                'idProduct' => 'PRD-000002',
+                'sku'       => 'BTK-SL-L',
+                'stock'     => 10,
+                'price'     => 160000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000003',
+                'idProduct' => 'PRD-000002',
+                'sku'       => 'BTK-SL-XL',
+                'stock'     => 5,
+                'price'     => 175000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000004',
+                'idProduct' => 'PRD-000009',
+                'sku'       => 'JKT-TNN-S',
+                'stock'     => 8,
+                'price'     => 325000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000005',
+                'idProduct' => 'PRD-000009',
+                'sku'       => 'JKT-TNN-M',
+                'stock'     => 12,
+                'price'     => 350000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000006',
+                'idProduct' => 'PRD-000007',
+                'sku'       => 'KRP-TMP-200G',
+                'stock'     => 100,
+                'price'     => 25000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000007',
+                'idProduct' => 'PRD-000007',
+                'sku'       => 'KRP-TMP-500G',
+                'stock'     => 50,
+                'price'     => 55000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000008',
+                'idProduct' => 'PRD-000010',
+                'sku'       => 'RDN-BDE-ORI',
+                'stock'     => 20,
+                'price'     => 85000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000009',
+                'idProduct' => 'PRD-000010',
+                'sku'       => 'RDN-BDE-PDS',
+                'stock'     => 15,
+                'price'     => 90000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000010',
+                'idProduct' => 'PRD-000001',
+                'sku'       => 'VAS-RTN-NAT',
+                'stock'     => 25,
+                'price'     => 125000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000011',
+                'idProduct' => 'PRD-000003',
+                'sku'       => 'KPI-ARC-250G',
+                'stock'     => 80,
+                'price'     => 45000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000012',
+                'idProduct' => 'PRD-000004',
+                'sku'       => 'RAK-JTI-60CM',
+                'stock'     => 20,
+                'price'     => 285000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000013',
+                'idProduct' => 'PRD-000005',
+                'sku'       => 'GRD-PRC-SHB',
+                'stock'     => 30,
+                'price'     => 120000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000014',
+                'idProduct' => 'PRD-000006',
+                'sku'       => 'MSK-KNY-HRB',
+                'stock'     => 60,
+                'price'     => 35000.0,
+                'isActive'  => true,
+            ],
+            [
+                'idItem'    => 'ITM-000015',
+                'idProduct' => 'PRD-000008',
+                'sku'       => 'PLT-LLE-5KG',
+                'stock'     => 40,
+                'price'     => 75000.0,
+                'isActive'  => true,
+            ],
+        ];
 
-        foreach ($products as $product) {
-            // Setiap produk memiliki 1 hingga 3 variasi/item
-            ProductItem::factory(rand(1, 3))->create([
-                'idProduct' => $product->idProduct,
-            ]);
+        foreach ($productItems as $item) {
+            ProductItem::create($item);
         }
     }
 }

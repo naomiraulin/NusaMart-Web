@@ -11,29 +11,39 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['id' => 'CAT-000001', 'name' => 'Makanan & Minuman', 'subs' => ['Makanan Ringan', 'Minuman', 'Bumbu & Rempah']],
-            ['id' => 'CAT-000002', 'name' => 'Fashion',           'subs' => ['Pakaian Pria', 'Pakaian Wanita', 'Aksesoris']],
-            ['id' => 'CAT-000003', 'name' => 'Kerajinan Tangan',  'subs' => ['Anyaman', 'Ukiran', 'Batik']],
-            ['id' => 'CAT-000004', 'name' => 'Pertanian',         'subs' => ['Sayuran', 'Buah-buahan', 'Rempah']],
+            [
+                'id'      => 'CAT-000001',
+                'name'    => 'Fashion Lokal',
+                'iconURL' => null,
+                'subs'    => [
+                    ['id' => 'SUB-000001', 'name' => 'Batik', 'description' => 'Batik tulis dan cap lokal'],
+                ],
+            ],
+            [
+                'id'      => 'CAT-000002',
+                'name'    => 'Kuliner Nusantara',
+                'iconURL' => null,
+                'subs'    => [
+                    ['id' => 'SUB-000002', 'name' => 'Kopi', 'description' => 'Biji kopi asli daerah'],
+                ],
+            ],
         ];
-
-        $subCounter = 1;
 
         foreach ($categories as $cat) {
             Category::create([
                 'idCategory'   => $cat['id'],
                 'categoryName' => $cat['name'],
+                'iconURL'      => $cat['iconURL'],
                 'isActive'     => true,
             ]);
 
-            foreach ($cat['subs'] as $subName) {
+            foreach ($cat['subs'] as $sub) {
                 SubCategory::create([
-                    'idSubCategory'   => 'SUB-' . str_pad($subCounter, 6, '0', STR_PAD_LEFT),
+                    'idSubCategory'   => $sub['id'],
                     'idCategory'      => $cat['id'],
-                    'subCategoryName' => $subName,
-                    'description'     => null,
+                    'subCategoryName' => $sub['name'],
+                    'description'     => $sub['description'],
                 ]);
-                $subCounter++;
             }
         }
     }
