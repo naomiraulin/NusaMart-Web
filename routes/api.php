@@ -30,6 +30,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/addresses/{id}',       [UserAddressController::class, 'update']);
         Route::delete('/addresses/{id}',    [UserAddressController::class, 'destroy']);
         Route::put('/addresses/{id}/default', [UserAddressController::class, 'setDefault']);
+
+        // === TAMBAHAN BARU ===
+        // Mengambil profil user lain berdasarkan ID (misal: untuk melihat toko seller)
+        // Harus diletakkan di paling bawah agar "profile" dan "addresses" tidak terbaca sebagai {id}
+        Route::get('/{id}',                 [UserController::class, 'show']);
     });
 
 });
