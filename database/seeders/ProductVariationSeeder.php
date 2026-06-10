@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\ProductItem;
 use App\Models\ProductVariation;
 use Illuminate\Database\Seeder;
 
@@ -10,13 +9,71 @@ class ProductVariationSeeder extends Seeder
 {
     public function run(): void
     {
-        $productItems = ProductItem::all();
+        $variations = [
+            [
+                'idVariation'   => 'VAR-000001',
+                'idItem'        => 'ITM-000001',
+                'typeVariation' => 'Ukuran',
+                'value'         => 'M',
+            ],
+            [
+                'idVariation'   => 'VAR-000002',
+                'idItem'        => 'ITM-000002',
+                'typeVariation' => 'Ukuran',
+                'value'         => 'L',
+            ],
+            [
+                'idVariation'   => 'VAR-000003',
+                'idItem'        => 'ITM-000003',
+                'typeVariation' => 'Ukuran',
+                'value'         => 'XL',
+            ],
+            [
+                'idVariation'   => 'VAR-000004',
+                'idItem'        => 'ITM-000004',
+                'typeVariation' => 'Ukuran',
+                'value'         => 'S',
+            ],
+            [
+                'idVariation'   => 'VAR-000005',
+                'idItem'        => 'ITM-000005',
+                'typeVariation' => 'Ukuran',
+                'value'         => 'M',
+            ],
+            [
+                'idVariation'   => 'VAR-000006',
+                'idItem'        => 'ITM-000006',
+                'typeVariation' => 'Berat',
+                'value'         => '200 gram',
+            ],
+            [
+                'idVariation'   => 'VAR-000007',
+                'idItem'        => 'ITM-000007',
+                'typeVariation' => 'Berat',
+                'value'         => '500 gram',
+            ],
+            [
+                'idVariation'   => 'VAR-000008',
+                'idItem'        => 'ITM-000008',
+                'typeVariation' => 'Rasa',
+                'value'         => 'Original',
+            ],
+            [
+                'idVariation'   => 'VAR-000009',
+                'idItem'        => 'ITM-000009',
+                'typeVariation' => 'Rasa',
+                'value'         => 'Pedas',
+            ],
+            [
+                'idVariation'   => 'VAR-000010',
+                'idItem'        => 'ITM-000010',
+                'typeVariation' => 'Warna',
+                'value'         => 'Natural',
+            ],
+        ];
 
-        foreach ($productItems as $item) {
-            // Berikan 1 hingga 2 variasi (misal: Warna dan Ukuran) untuk SKU ini
-            ProductVariation::factory(rand(1, 2))->create([
-                'idItem' => $item->idItem,
-            ]);
+        foreach ($variations as $variation) {
+            ProductVariation::create($variation);
         }
     }
 }
