@@ -10,73 +10,132 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $userService = app(UserService::class);
-
-        // 1. Akun Admin
-        User::create([
-            'idUser'   => $userService->generateUserId('ADMIN'),
-            'username' => 'admin_super',
-            'email'    => 'admin@nusamart.com',
-            'password' => bcrypt('password123'),
-            'phone'    => '081111111111',
-            'role'     => 'ADMIN',
-            'imageURL' => null,
-            'createAt' => now(),
-            'updateAt' => now(),
-        ]);
-
-        // 2. Akun Seller
-        User::create([
-            'idUser'   => $userService->generateUserId('SELLER'),
-            'username' => 'toko_sejahtera',
-            'email'    => 'toko@umkm.com',
-            'password' => bcrypt('password123'),
-            'phone'    => '082222222222',
-            'role'     => 'SELLER',
-            'imageURL' => null,
-            'createAt' => now(),
-            'updateAt' => now(),
-        ]);
-
-        // 3. Akun Buyer
-        User::create([
-            'idUser'   => $userService->generateUserId('BUYER'),
-            'username' => 'buyer_pertama',
-            'email'    => 'buyer@nusamart.com',
-            'password' => bcrypt('password123'),
-            'phone'    => '083333333333',
-            'role'    => 'BUYER',
-            'imageURL' => null,
-            'createAt' => now(),
-            'updateAt' => now(),
-        ]);
-
-        // 4. Dummy tambahan — satu per satu agar ID tidak duplicate
-        $dummyUsers = [
-            ['role' => 'BUYER',  'username' => 'buyer_dummy1',  'email' => 'buyer1@dummy.com'],
-            ['role' => 'BUYER',  'username' => 'buyer_dummy2',  'email' => 'buyer2@dummy.com'],
-            ['role' => 'BUYER',  'username' => 'buyer_dummy3',  'email' => 'buyer3@dummy.com'],
-            ['role' => 'BUYER',  'username' => 'buyer_dummy4',  'email' => 'buyer4@dummy.com'],
-            ['role' => 'BUYER',  'username' => 'buyer_dummy5',  'email' => 'buyer5@dummy.com'],
-            ['role' => 'SELLER', 'username' => 'seller_dummy1', 'email' => 'seller1@dummy.com'],
-            ['role' => 'SELLER', 'username' => 'seller_dummy2', 'email' => 'seller2@dummy.com'],
-            ['role' => 'SELLER', 'username' => 'seller_dummy3', 'email' => 'seller3@dummy.com'],
-            ['role' => 'BUYER',  'username' => 'buyer_dummy6',  'email' => 'buyer6@dummy.com'],
-            ['role' => 'BUYER',  'username' => 'buyer_dummy7',  'email' => 'buyer7@dummy.com'],
+        $users = [
+            [
+                'idUser'   => 'BYR-000001',
+                'username' => 'trisa',
+                'email'    => 'trisa@student.uns.ac.id',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567890',
+                'role'     => 'BUYER',
+                'createAt' => '2026-05-14 10:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000001',
+                'username' => 'rifqia',
+                'email'    => 'rifqia@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '089876543210',
+                'role'     => 'SELLER',
+                'createAt' => '2026-01-10 08:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000002',
+                'username' => 'siti_merona',
+                'email'    => 'sitiyati@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567891',
+                'role'     => 'SELLER',
+                'createAt' => '2026-01-12 09:30:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000003',
+                'username' => 'budipekerti',
+                'email'    => 'budi@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567892',
+                'role'     => 'SELLER',
+                'createAt' => '2026-02-01 07:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000004',
+                'username' => 'agus_joss',
+                'email'    => 'agus123@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567893',
+                'role'     => 'SELLER',
+                'createAt' => '2026-02-05 10:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000005',
+                'username' => 'melly_admin',
+                'email'    => 'melly@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567894',
+                'role'     => 'SELLER',
+                'createAt' => '2026-02-10 08:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000006',
+                'username' => 'dewidewi',
+                'email'    => 'dewi@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567895',
+                'role'     => 'SELLER',
+                'createAt' => '2026-02-15 11:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000007',
+                'username' => 'ekocemalcemil',
+                'email'    => 'ekoyanto@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567896',
+                'role'     => 'SELLER',
+                'createAt' => '2026-03-01 09:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000008',
+                'username' => 'jokopakanlele',
+                'email'    => 'jokolele@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567897',
+                'role'     => 'SELLER',
+                'createAt' => '2026-03-05 10:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000009',
+                'username' => 'andi_gofashion',
+                'email'    => 'andifashion@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567898',
+                'role'     => 'SELLER',
+                'createAt' => '2026-03-10 08:30:00',
+                'updateAt' => '2026-05-14 15:00:00',
+                'imageURL' => null
+            ],
+            [
+                'idUser'   => 'SLR-000010',
+                'username' => 'bude_mar',
+                'email'    => 'maryati01@gmail.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081234567899',
+                'role'     => 'SELLER',
+                'createAt' => '2026-03-15 09:00:00',
+                'updateAt' => '2026-05-14 16:00:00',
+                'imageURL' => null
+            ]
         ];
 
-        foreach ($dummyUsers as $dummy) {
-            User::create([
-                'idUser'   => $userService->generateUserId($dummy['role']),
-                'username' => $dummy['username'],
-                'email'    => $dummy['email'],
-                'password' => bcrypt('password123'),
-                'phone'    => '08' . rand(100000000, 999999999),
-                'role'     => $dummy['role'],
-                'imageURL' => null,
-                'createAt' => now(),
-                'updateAt' => now(),
-            ]);
+        foreach ($users as $userData) {
+            User::create($userData);
         }
     }
 }
