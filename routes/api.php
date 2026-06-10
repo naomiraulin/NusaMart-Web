@@ -5,12 +5,18 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserAddressController;
+use App\Http\Controllers\Api\StoreController;
+
+// Public
+
 
 // Public routes
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);
 });
+
+Route::get('/stores/{id}', [StoreController::class, 'show']);
 
 Route::get('/products', [ProductController::class, 'index']);
 
@@ -35,6 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // Mengambil profil user lain berdasarkan ID (misal: untuk melihat toko seller)
         // Harus diletakkan di paling bawah agar "profile" dan "addresses" tidak terbaca sebagai {id}
         Route::get('/{id}',                 [UserController::class, 'show']);
+
+        // Seller
+        Route::prefix('seller')->group(function () {
+            Route::get('/store',  [StoreController::class, 'myStore']);
+            Route::put('/store',  [StoreController::class, 'update']);
+        });
+
     });
 
 });
