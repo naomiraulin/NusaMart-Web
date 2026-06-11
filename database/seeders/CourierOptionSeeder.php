@@ -14,21 +14,21 @@ class CourierOptionSeeder extends Seeder
             "idCourier": "CUR-000001",
             "courierName": "JNE Reguler",
             "serviceType": "REGULAR",
-            "timeEstimation": "2-3 Hari",
+            "timeEstimation": 3,
             "isActive": true
           },
           {
             "idCourier": "CUR-000002",
             "courierName": "SiCepat HALU",
             "serviceType": "REGULAR",
-            "timeEstimation": "1-2 Hari",
+            "timeEstimation": 2,
             "isActive": true
           },
           {
             "idCourier": "CUR-000003",
             "courierName": "J&T Cargo",
             "serviceType": "KARGO",
-            "timeEstimation": "5-7 Hari",
+            "timeEstimation": 7,
             "isActive": true
           }
         ]';

@@ -4,31 +4,48 @@ namespace Database\Seeders;
 
 use App\Models\StoreWallet;
 use App\Models\Withdrawal;
-use App\Services\IdGeneratorService;
 use Illuminate\Database\Seeder;
 
 class WithdrawalSeeder extends Seeder
 {
     public function run(): void
     {
-        $idGenerator = app(IdGeneratorService::class);
         $wallets = StoreWallet::all();
 
-        foreach ($wallets as $wallet) {
-            if (rand(1, 100) <= 50) {
-                $jumlah = rand(1, 3);
-                for ($i = 0; $i < $jumlah; $i++) {
-                    $status      = fake()->randomElement(['PENDING', 'PROCESSING', 'DONE', 'FAILED']);
-                    $transferPic = ($status === 'DONE') ? fake()->imageUrl(640, 480, 'receipt', true) : null;
+        if ($wallets->count() > 0) {
+            $counter = 1;
 
-                    Withdrawal::create([
-                        'idWithdrawal' => $idGenerator->generate('WDR', Withdrawal::class, 'idWithdrawal'),
-                        'idWallet'     => $wallet->idWallet,
-                        'nominal'      => fake()->randomFloat(2, 50000, 2000000),
-                        'serviceCost'  => fake()->randomElement([2500, 6500]),
-                        'status'       => $status,
-                        'transferPic'  => $transferPic,
-                    ]);
+            foreach ($wallets as $wallet) {
+                // Simulasi: 50% kemungkinan toko pernah melakukan penarikan dana
+                if (rand(1, 100) <= 50) {
+                    $jumlah = rand(1, 3); // Tiap toko melakukan 1 sampai 3 kali penarikan
+
+                    for ($i = 0; $i < $jumlah; $i++) {
+                        $statusOptions = ['PENDING', 'PROCESSING', 'DONE', 'FAILED'];
+                        $status = $statusOptions[array_rand($statusOptions)];
+
+                        // Jika status DONE, beri URL gambar struk. Jika tidak, kosongkan.
+                        // Menggunakan layanan placeholder gambar statis agar proses seeder lebih cepat
+                        $transferPic = ($status === 'DONE') ? 'https://dummyimage.com/640x480/cccccc/000000&text=Receipt+Transfer' : null;
+
+                        // Nominal penarikan kelipatan Rp 50.000 agar rapi (antara 50.000 sampai 2.000.000)
+                        $nominal = rand(1, 40) * 50000;
+
+                        // Biaya admin bank (misal: 2500 untuk bank sama, 6500 untuk antar bank)
+                        $serviceCosts = [2500, 6500];
+                        $serviceCost = $serviceCosts[array_rand($serviceCosts)];
+
+                        Withdrawal::create([
+                            // Generate ID Penarikan (WDR-000001, WDR-000002, dst)
+                            // Catatan: Jika aplikasimu wajib pakai $idGenerator->generate(), silakan diganti kembali.
+                            'idWithdrawal' => 'WDR-' . str_pad($counter++, 6, '0', STR_PAD_LEFT),
+                            'idWallet'     => $wallet->idWallet,
+                            'nominal'      => (float) $nominal,
+                            'serviceCost'  => (float) $serviceCost,
+                            'status'       => $status,
+                            'transferPic'  => $transferPic,
+                        ]);
+                    }
                 }
             }
         }

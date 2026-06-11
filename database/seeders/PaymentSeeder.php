@@ -6,50 +6,63 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Payment;
 use Illuminate\Database\Seeder;
-use Carbon\Carbon;
 
 class PaymentSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil semua data Order dan Metode Pembayaran yang valid
-        $orders = Order::all();
-        $methods = PaymentMethod::all();
+        // 1. Data JSON Spesifik untuk 2 pembayaran (sinkron dengan OrderSeeder)
+        $jsonString = '[
+          {
+            "idPayment": "PAY-000001",
+            "idMethod": "MET-000001",
+            "transactionIdGateway": "TRX-857392",
+            "snapToken": null,
+            "paymentStatus": "APPROVED",
+            "paymentTime": "2026-05-14T10:05:00",
+            "idUser": "BYR-000001",
+            "totalAmount": 164500.0,
+            "createAt": "2026-05-14T10:00:00",
+            "updateAt": "2026-05-14T10:05:00"
+          },
+          {
+            "idPayment": "PAY-000002",
+            "idMethod": "MET-000002",
+            "transactionIdGateway": "TRX-482019",
+            "snapToken": null,
+            "paymentStatus": "APPROVED",
+            "paymentTime": "2026-05-15T09:10:00",
+            "idUser": "BYR-000001",
+            "totalAmount": 132500.0,
+            "createAt": "2026-05-15T09:00:00",
+            "updateAt": "2026-05-15T09:10:00"
+          }
+        ]';
 
-        // Pastikan ada order dan metode pembayaran sebelum mengeksekusi
-        if ($orders->count() > 0 && $methods->count() > 0) {
-            $counter = 1;
+        $payments = json_decode($jsonString, true);
 
-            foreach ($orders as $order) {
-                // Pilih metode pembayaran secara acak untuk setiap order
-                $randomMethod = $methods->random();
+        // 2. Alur validasi dan eksekusi
+        foreach ($payments as $data) {
+            // Validasi: Pastikan Order dan Payment Method benar-benar ada
+            $methodExists = PaymentMethod::where('idMethod', $data['idMethod'])->exists();
 
-                // Acak status pembayaran agar data testing lebih realistis untuk aplikasi UMKM
-                $statusOptions = ['PENDING', 'APPROVED', 'FAILED'];
-                $status = $statusOptions[array_rand($statusOptions)];
-
-                // Buat record pembayaran
+            if ($methodExists) {
                 $payment = Payment::create([
-                    'idPayment'            => 'PAY-' . str_pad($counter++, 6, '0', STR_PAD_LEFT),
-                    'idOrder'              => $order->idOrder,
-                    'idMethod'             => $randomMethod->idMethod,
-                    
-                    // Simulasi ID dari Payment Gateway (misal Midtrans) jika statusnya APPROVED
-                    'transactionIdGateway' => $status === 'APPROVED' ? 'TRX-' . rand(100000, 999999) : null,
-                    'snapToken'            => null,
-                    'paymentStatus'        => $status,
-                    
-                    // Isi tanggal bayar hanya jika statusnya APPROVED
-                    'paymentTime'          => $status === 'APPROVED' ? Carbon::now()->subHours(rand(1, 24)) : null,
-                    
-                    // Tarik data langsung dari relasi Order
-                    'idUser'               => $order->idUser,
-                    'totalAmount'          => $order->grandTotal, 
+                    'idPayment'            => $data['idPayment'],
+                    'idMethod'             => $data['idMethod'],
+                    'transactionIdGateway' => $data['transactionIdGateway'],
+                    'snapToken'            => $data['snapToken'],
+                    'paymentStatus'        => $data['paymentStatus'],
+                    'paymentTime'          => $data['paymentTime'],
+                    'idUser'               => $data['idUser'],
+                    'totalAmount'          => (float) $data['totalAmount'],
+                    'createAt'             => $data['createAt'],
+                    'updateAt'             => $data['updateAt'],
                 ]);
 
-                // Update Order agar memiliki relasi balik ke Payment ini
-                $order->update([
-                    'paymentId' => $payment->idPayment
+                // Update Order yang sesuai dengan idPayment baru
+                Order::where('idOrder', $data['idOrder'] ?? null)->update([
+                    'idPayment' => $payment->idPayment
                 ]);
             }
         }

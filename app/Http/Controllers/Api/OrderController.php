@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Notification; // Pastikan import Model Notification
 use App\Services\IdGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -29,10 +30,21 @@ class OrderController extends Controller
     // GET /api/orders/{id} → detail order
     public function show(Request $request, string $id)
     {
+        $userId = $request->user()->idUser;
+
         $order = Order::where('idOrder', $id)
-            ->where('idUser', $request->user()->idUser)
             ->with('orderItems')
             ->firstOrFail();
+
+        // Cek apakah user adalah buyer pemilik order ATAU seller dari toko terkait
+        $store = \App\Models\Store::where('idStore', $order->idStore)->first();
+
+        $isBuyer  = $order->idUser === $userId;
+        $isSeller = $store && $store->idSeller === $userId;
+
+        if (!$isBuyer && !$isSeller) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
         return response()->json($order);
     }
@@ -81,7 +93,8 @@ class OrderController extends Controller
             'updateAt'          => now(),
         ]);
 
-        // Simpan order items
+        // Simpan order items dan gabungkan nama produk untuk notifikasi
+        $productNamesArray = [];
         foreach ($request->items as $item) {
             OrderItem::create([
                 'idOrderItem'   => $this->idGenerator->generate('OIT', OrderItem::class, 'idOrderItem'),
@@ -90,6 +103,26 @@ class OrderController extends Controller
                 'quantity'      => $item['quantity'],
                 'nameSnapshot'  => $item['nameSnapshot'],
                 'priceSnapshot' => $item['priceSnapshot'],
+            ]);
+            $productNamesArray[] = $item['nameSnapshot'];
+        }
+        $productNames = implode(', ', $productNamesArray);
+
+        // ==========================================
+        // NOTIFIKASI: Pesanan Baru Masuk (Untuk Seller)
+        // ==========================================
+        $store = \App\Models\Store::where('idStore', $request->idStore)->first();
+        if ($store) {
+            Notification::create([
+                'idNotif'       => $this->idGenerator->generate('NTF', Notification::class, 'idNotif'),
+                'idUser'        => $store->idSeller, // Pastikan kolom ini sesuai dengan DB kamu (misal: idUser atau idSeller)
+                'title'         => 'Pesanan Baru Masuk! 🎉',
+                'body'          => 'Hore! Ada pesanan baru untuk ' . $productNames . '. Segera proses pesanannya ya!',
+                'type'          => 'ORDER',
+                'isRead'        => false,
+                'referenceId'   => $order->idOrder,
+                'referenceType' => 'ORDER',
+                'createAt'      => now(),
             ]);
         }
 
@@ -104,6 +137,7 @@ class OrderController extends Controller
     {
         $order = Order::where('idOrder', $id)
             ->where('idUser', $request->user()->idUser)
+            ->with('orderItems')
             ->firstOrFail();
 
         if (!in_array($order->orderStatus, ['PENDING', 'PROCESSED'])) {
@@ -116,6 +150,26 @@ class OrderController extends Controller
             'orderStatus' => 'CANCELLED',
             'updateAt'    => now(),
         ]);
+
+        // ==========================================
+        // NOTIFIKASI: Pesanan Dibatalkan Pembeli (Untuk Seller)
+        // ==========================================
+        $productNames = $order->orderItems->pluck('nameSnapshot')->implode(', ');
+        $store = \App\Models\Store::where('idStore', $order->idStore)->first();
+        
+        if ($store) {
+            Notification::create([
+                'idNotif'       => $this->idGenerator->generate('NTF', Notification::class, 'idNotif'),
+                'idUser'        => $store->idSeller,
+                'title'         => 'Pesanan Dibatalkan ❌',
+                'body'          => 'Yah, pesanan untuk ' . $productNames . ' telah dibatalkan oleh pembeli.',
+                'type'          => 'ORDER',
+                'isRead'        => false,
+                'referenceId'   => $order->idOrder,
+                'referenceType' => 'ORDER',
+                'createAt'      => now(),
+            ]);
+        }
 
         return response()->json([
             'message' => 'Pesanan berhasil dibatalkan',
@@ -130,12 +184,47 @@ class OrderController extends Controller
             'orderStatus' => 'required|in:PENDING,PROCESSED,SHIPPED,DELIVERED,CANCELLED',
         ]);
 
-        $order = Order::where('idOrder', $id)->firstOrFail();
+        $order = Order::where('idOrder', $id)->with('orderItems')->firstOrFail();
 
         $order->update([
             'orderStatus' => $request->orderStatus,
             'arrivedDate' => $request->orderStatus === 'DELIVERED' ? now() : $order->arrivedDate,
             'updateAt'    => now(),
+        ]);
+
+        // ==========================================
+        // NOTIFIKASI: Status Pesanan Berubah (Untuk Buyer)
+        // ==========================================
+        $productNames = $order->orderItems->pluck('nameSnapshot')->implode(', ');
+        $status = strtoupper($request->orderStatus);
+        
+        $title = 'Update Pesanan';
+        $body = "Ada pembaruan pada pesanan kamu untuk $productNames.";
+
+        if ($status === 'PROCESSED') {
+            $title = 'Pesanan Diproses 📦';
+            $body = "Pesanan kamu untuk $productNames sedang dipersiapkan oleh penjual.";
+        } elseif ($status === 'SHIPPED') {
+            $title = 'Pesanan Dikirim 🚚';
+            $body = "Pesanan kamu untuk $productNames sudah diserahkan ke kurir dan sedang dalam perjalanan!";
+        } elseif ($status === 'DELIVERED') {
+            $title = 'Pesanan Selesai ✅';
+            $body = "Pesanan kamu untuk $productNames telah tiba. Terima kasih telah berbelanja!";
+        } elseif ($status === 'CANCELLED') {
+            $title = 'Pesanan Dibatalkan ❌';
+            $body = "Pesanan kamu untuk $productNames telah dibatalkan oleh penjual.";
+        }
+
+        Notification::create([
+            'idNotif'       => $this->idGenerator->generate('NTF', Notification::class, 'idNotif'),
+            'idUser'        => $order->idUser, // Notif dikirim ke Pembeli
+            'title'         => $title,
+            'body'          => $body,
+            'type'          => 'ORDER',
+            'isRead'        => false,
+            'referenceId'   => $order->idOrder,
+            'referenceType' => 'ORDER',
+            'createAt'      => now(),
         ]);
 
         return response()->json([

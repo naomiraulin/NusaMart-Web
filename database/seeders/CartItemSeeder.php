@@ -11,35 +11,37 @@ class CartItemSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil seluruh data keranjang dan item produk yang ada di database
-        $carts = Cart::all();
-        $productItems = ProductItem::all();
+        // 1. Ambil data dari JSON
+        $jsonString = '[
+          {
+            "idCartItem": "CRI-000001",
+            "idCart": "CRT-000001",
+            "idItem": "ITM-000003",
+            "quantity": 2,
+            "isChecked": true
+          }
+        ]';
 
-        // Pastikan ada cart dan product item sebelum melakukan proses
-        if ($carts->count() > 0 && $productItems->count() > 0) {
-            $counter = 1;
+        $cartItems = json_decode($jsonString, true);
 
-            foreach ($carts as $cart) {
-                // Tentukan jumlah macam produk acak untuk tiap keranjang (misal: 1 sampai 4 macam produk)
-                $maxItems = min(4, $productItems->count());
-                $randomItems = $productItems->random(rand(1, $maxItems));
+        // 2. Alur validasi dan eksekusi
+        foreach ($cartItems as $item) {
+            // Cek apakah idCart dan idItem benar-benar ada di database
+            $cartExists = Cart::where('idCart', $item['idCart'])->exists();
+            $itemExists = ProductItem::where('idItem', $item['idItem'])->exists();
 
-                foreach ($randomItems as $item) {
-                    CartItem::create([
-                        // Generate ID unik untuk cart item (CRI-000001, CRI-000002, dst.)
-                        'idCartItem' => 'CRI-' . str_pad($counter++, 6, '0', STR_PAD_LEFT),
-                        
-                        // Pasangkan dengan keranjang dan item produk yang valid
-                        'idCart'     => $cart->idCart,
-                        'idItem'     => $item->idItem,
-                        
-                        // Berikan kuantitas acak (misal user memasukkan 1 sampai 5 barang yang sama)
-                        'quantity'   => rand(1, 5),
-                        
-                        // Acak status isChecked (true atau false) layaknya user yang memilih barang untuk di-checkout
-                        'isChecked'  => (bool) rand(0, 1),
-                    ]);
-                }
+            // Jika kedua data referensi tersebut ditemukan, baru masukkan ke dalam database
+            if ($cartExists && $itemExists) {
+                CartItem::create([
+                    'idCartItem' => $item['idCartItem'],
+                    'idCart'     => $item['idCart'],
+                    'idItem'     => $item['idItem'],
+                    'quantity'   => $item['quantity'],
+                    'isChecked'  => $item['isChecked'],
+                ]);
+            } else {
+                // Opsional: Untuk melihat data mana yang dilewati karena relasinya tidak lengkap
+                // echo "Gagal menambah CRI: Cart atau Item tidak ditemukan.\n";
             }
         }
     }

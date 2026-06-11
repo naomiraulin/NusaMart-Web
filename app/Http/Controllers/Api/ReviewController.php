@@ -54,7 +54,7 @@ class ReviewController extends Controller
             'idOrderItem' => 'required|string',
             'rating'      => 'required|numeric|min:1|max:5',
             'comment'     => 'sometimes|nullable|string',
-            'imageFile'   => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'imageFile'   => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:10240',
         ]);
 
         // Cek apakah order item milik user yang login

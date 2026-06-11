@@ -32,14 +32,14 @@ class PaymentController extends Controller
         return response()->json($payment);
     }
 
-    // GET /api/payments/order/{orderId} → payment by order
-    public function byOrder(string $orderId)
+    // GET /api/payments/order/{idOrder} → payment by order
+    public function byOrder(string $idOrder)
     {
-        $order = Order::where('idOrder', $orderId)
+        $order = Order::where('idOrder', $idOrder)
             ->where('idUser', request()->user()->idUser)
             ->firstOrFail();
 
-        $payment = Payment::where('idPayment', $order->paymentId)->first();
+        $payment = Payment::where('idPayment', $order->idPayment)->first();
 
         return response()->json($payment);
     }
@@ -62,11 +62,11 @@ class PaymentController extends Controller
             'totalAmount'          => $request->totalAmount,
             'transactionIdGateway' => $request->transactionIdGateway,
             'snapToken'            => $request->snapToken,
-            'paymentStatus'        => 'PENDING',
+            'paymentStatus'        => 'APPROVED', // Simulasi langsung APPROVED untuk memudahkan testing
             'paymentTime'          => null,
             'imageURL'             => $request->imageURL,
             'createAt'             => now(),
-            'updateAt'             => now(),
+            'updateAt'             => now(),            
         ]);
 
         return response()->json([

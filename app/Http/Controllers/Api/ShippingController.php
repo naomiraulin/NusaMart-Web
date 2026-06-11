@@ -29,10 +29,10 @@ class ShippingController extends Controller
         return response()->json($courier);
     }
 
-    // GET /api/shipping/order/{orderId} → shipping by order
-    public function byOrder(string $orderId)
+    // GET /api/shipping/order/{idOrder} → shipping by order
+    public function byOrder(string $idOrder)
     {
-        $shipping = Shipping::where('idOrder', $orderId)
+        $shipping = Shipping::where('idOrder', $idOrder)
             ->with('shippingTrackings')
             ->firstOrFail();
 

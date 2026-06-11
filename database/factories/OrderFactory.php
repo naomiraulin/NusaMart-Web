@@ -32,7 +32,7 @@ class OrderFactory extends Factory
             'orderDate'         => $orderDate,
             'arrivedDate'       => $arrivedDate,
             'buyerNote'         => fake()->optional()->sentence(),
-            'paymentId'         => null,
+            'idPayment'         => null,
             'createAt'          => now(),
             'updateAt'          => now(),
         ];

@@ -10,20 +10,31 @@ class CartSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil semua user dari database
-        // Opsional: Jika kamu punya pemisahan role, bisa gunakan User::where('role', 'buyer')->get();
-        $users = User::where('role', 'buyer')->get(); 
-        
-        $counter = 1;
+        // 1. Ambil data dari JSON
+        $jsonString = '[
+          {
+            "idCart": "CRT-000001",
+            "idUser": "BYR-000001"
+          }
+        ]';
 
-        foreach ($users as $user) {
-            Cart::create([
-                // Generate ID Cart berurutan otomatis (CRT-000001, CRT-000002, dst.)
-                'idCart' => 'CRT-' . str_pad($counter++, 6, '0', STR_PAD_LEFT),
-                
-                // Pasangkan dengan ID User yang benar-benar ada di database
-                'idUser' => $user->idUser, 
-            ]);
+        $carts = json_decode($jsonString, true);
+
+        // 2. Alur validasi dan eksekusi
+        foreach ($carts as $cart) {
+            // Cek apakah idUser tersebut (contoh: BYR-000001) benar-benar ada di database
+            $userExists = User::where('idUser', $cart['idUser'])->exists();
+
+            // Jika user ditemukan, baru buatkan cart-nya untuk mencegah error relasi (foreign key constraint)
+            if ($userExists) {
+                Cart::create([
+                    'idCart' => $cart['idCart'],
+                    'idUser' => $cart['idUser'],
+                ]);
+            } else {
+                // Opsional: Kamu bisa mencetak pesan di terminal jika ingin tahu ada data yang terlewat
+                // echo "User dengan ID {$cart['idUser']} tidak ditemukan. Keranjang dilewati.\n";
+            }
         }
     }
 }

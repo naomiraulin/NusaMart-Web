@@ -10,24 +10,39 @@ class ShippingTrackingSeeder extends Seeder
 {
     public function run(): void
     {
-        // Hanya ambil pengiriman yang resinya sudah keluar (sudah diproses/dikirim)
-        $shippings = Shipping::whereNotNull('resi')->get();
+        // 1. Ambil data dari JSON
+        $jsonString = '[
+          {
+            "idTracking": "TRK-000001",
+            "idShipping": "SHP-000001",
+            "packetLocation": "Surakarta",
+            "description": "Paket telah diserahkan ke pihak ekspedisi JNE",
+            "updateAt": "2026-05-14T15:00:00"
+          }
+        ]';
 
-        if ($shippings->count() > 0) {
-            foreach ($shippings as $shipping) {
-                // Buat 2 sampai 4 riwayat pelacakan per pengiriman
-                ShippingTracking::factory(rand(2, 4))->create([
-                    'idShipping' => $shipping->idShipping,
+        $trackings = json_decode($jsonString, true);
+
+        // 2. Alur validasi dan eksekusi
+        foreach ($trackings as $data) {
+            // Cek apakah idShipping (referensi pengirimannya) benar-benar ada di tabel shippings
+            $shippingExists = Shipping::where('idShipping', $data['idShipping'])->exists();
+
+            // Jika pengiriman valid, masukkan data pelacakan
+            if ($shippingExists) {
+                ShippingTracking::create([
+                    'idTracking'     => $data['idTracking'],
+                    'idShipping'     => $data['idShipping'],
+                    'packetLocation' => $data['packetLocation'],
+                    'description'    => $data['description'],
+                    
+                    // Catatan: Jika databasemu menggunakan camelCase
+                    'updateAt'       => $data['updateAt'],
+                    'createAt'       => $data['updateAt'], // Biasanya waktu awal dibuat sama dengan waktu update
                 ]);
-
-                // Jika statusnya DELIVERED, tambahkan satu riwayat penutup yang logis
-                if ($shipping->shippingStatus === 'DELIVERED') {
-                    ShippingTracking::factory()->create([
-                        'idShipping' => $shipping->idShipping,
-                        'packetLocation' => 'Alamat Tujuan',
-                        'description' => 'Paket telah diterima dengan baik oleh pembeli.',
-                    ]);
-                }
+            } else {
+                // Opsional: Untuk mendeteksi jika ada relasi yang tidak ketemu
+                // echo "Gagal menambah tracking: Pengiriman dengan ID {$data['idShipping']} tidak ditemukan.\n";
             }
         }
     }

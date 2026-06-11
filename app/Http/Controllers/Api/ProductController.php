@@ -13,7 +13,10 @@ class ProductController extends Controller
     // GET /api/products → semua produk aktif
     public function index()
     {
-        $products = Product::where('productStatus', 'ACTIVE')->get();
+        // Gunakan Eager Loading (with) untuk mengambil items dan images sekaligus
+        $products = Product::with(['productItems', 'productImages'])
+                           ->where('productStatus', 'ACTIVE')
+                           ->get();
         return response()->json($products);
     }
 
@@ -22,11 +25,13 @@ class ProductController extends Controller
     {
         $product = Product::where('idProduct', $id)->firstOrFail();
 
-        $items = $product->productItems()->where('isActive', true)->get();
+        // Eager Load 'productVariations' agar tidak terjadi N+1 tersembunyi di dalam loop Laravel
+        $items = $product->productItems()->with('productVariations')->where('isActive', true)->get();
 
         // Attach variasi ke setiap item
         $itemsWithVariations = $items->map(function ($item) {
             $item->variations = $item->productVariations;
+            unset($item->productVariations); // Opsional: bersihkan field duplikat
             return $item;
         });
 
@@ -55,7 +60,10 @@ class ProductController extends Controller
     // GET /api/products/store/{storeId} → produk by toko
     public function byStore(string $storeId)
     {
-        $products = Product::where('idStore', $storeId)->get();
+        // Terapkan Eager Loading juga di sini agar halaman toko tidak lag
+        $products = Product::with(['productItems', 'productImages'])
+                           ->where('idStore', $storeId)
+                           ->get();
         return response()->json($products);
     }
 
@@ -64,7 +72,9 @@ class ProductController extends Controller
     {
         $keyword = $request->query('q');
 
-        $products = Product::where('productStatus', 'ACTIVE')
+        // Terapkan Eager Loading juga di sini agar hasil pencarian langsung muncul
+        $products = Product::with(['productItems', 'productImages'])
+            ->where('productStatus', 'ACTIVE')
             ->where('productName', 'like', '%' . $keyword . '%')
             ->get();
 

@@ -68,14 +68,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     
     // Shipping - Buyer
-    Route::get('/shipping/order/{orderId}',      [ShippingController::class, 'byOrder']);
+    Route::get('/shipping/order/{idOrder}',      [ShippingController::class, 'byOrder']);
     Route::get('/shipping/{id}/tracking',        [ShippingController::class, 'tracking']);
 
     // User
     Route::prefix('user')->group(function () {
         Route::get('/profile',                    [UserController::class, 'profile']);
         Route::put('/profile',                    [UserController::class, 'update']);
-        Route::get('/{id}',                       [UserController::class, 'show']);
 
         // Addresses
         Route::get('/addresses',                  [UserAddressController::class, 'index']);
@@ -83,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/addresses/{id}',             [UserAddressController::class, 'update']);
         Route::delete('/addresses/{id}',          [UserAddressController::class, 'destroy']);
         Route::put('/addresses/{id}/default',     [UserAddressController::class, 'setDefault']);
+        Route::get('/{id}',                       [UserController::class, 'show']);
     });
 
     // Cart
@@ -97,7 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payments
     Route::prefix('payments')->group(function () {
-        Route::get('/order/{orderId}',            [PaymentController::class, 'byOrder']);
+        Route::get('/order/{idOrder}',            [PaymentController::class, 'byOrder']);
         Route::get('/{id}',                       [PaymentController::class, 'show']);
         Route::post('/',                          [PaymentController::class, 'store']);
         Route::put('/{id}/status',                [PaymentController::class, 'updateStatus']);
@@ -169,3 +169,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/reports/{id}/status',       [AdminReportController::class, 'updateStatus']);
     });
 });
+
+Route::get('/user/{id}', [UserController::class, 'show']);

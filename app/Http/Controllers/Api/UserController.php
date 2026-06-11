@@ -4,9 +4,23 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class UserController extends Controller
 {
+    public function show(string $id)
+    {
+        $user = User::where('idUser', $id)->firstOrFail();
+
+        return response()->json([
+            'idUser'   => $user->idUser,
+            'username' => $user->username,
+            'role'     => $user->role,
+            'imageURL' => $user->imageURL,
+            'createAt' => $user->createAt,
+        ]);
+    }
+
     // GET /api/user/profile
     public function profile(Request $request)
     {
