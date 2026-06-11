@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('idItem');
             
             $table->integer('quantity')->default(1);
+            $table->boolean('isChecked')->default(false);
 
             // Mendefinisikan relasi
             $table->foreign('idCart')->references('idCart')->on('carts')->onDelete('cascade');

@@ -42,4 +42,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class, 'idOrder', 'idOrder');
     }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class, 'paymentId', 'idPayment');
+    }
 }

@@ -12,22 +12,29 @@ class OrderItemSeeder extends Seeder
     public function run(): void
     {
         $orders = Order::all();
-        $productItems = ProductItem::with('product')->get();
 
-        if ($orders->count() > 0 && $productItems->count() > 0) {
+        if ($orders->count() > 0) {
             foreach ($orders as $order) {
-                $maxItems = min(3, $productItems->count());
-                $randomItems = $productItems->random(rand(1, $maxItems));
+                // HANYA ambil item dari produk yang dimiliki oleh toko pada order ini
+                $storeProductItems = ProductItem::whereHas('product', function($query) use ($order) {
+                    $query->where('idStore', $order->idStore);
+                })->with('product')->get();
 
-                foreach ($randomItems as $item) {
-                    $productName = $item->product ? $item->product->productName : 'Produk UMKM Lokal';
+                // Pastikan toko tersebut punya minimal 1 produk
+                if ($storeProductItems->count() > 0) {
+                    $maxItems = min(3, $storeProductItems->count());
+                    $randomItems = $storeProductItems->random(rand(1, $maxItems));
 
-                    OrderItem::factory()->create([
-                        'idOrder'       => $order->idOrder,
-                        'idItem'        => $item->idItem,
-                        'nameSnapshot'  => $productName,
-                        'priceSnapshot' => $item->price,
-                    ]);
+                    foreach ($randomItems as $item) {
+                        $productName = $item->product ? $item->product->productName : 'Produk UMKM Lokal';
+
+                        OrderItem::factory()->create([
+                            'idOrder'       => $order->idOrder,
+                            'idItem'        => $item->idItem,
+                            'nameSnapshot'  => $productName,
+                            'priceSnapshot' => $item->price,
+                        ]);
+                    }
                 }
             }
         }
