@@ -5,50 +5,47 @@ namespace Database\Seeders;
 use App\Models\Store;
 use App\Models\BadgeVerification;
 use Illuminate\Database\Seeder;
-use Carbon\Carbon;
 
 class BadgeVerificationSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil semua toko dari database
-        $stores = Store::all();
-        $counter = 1;
+        // 1. Data JSON Spesifik untuk pengujian badge UMKM
+        $jsonString = '[
+          {
+            "idBadge": "BDG-000001",
+            "idStore": "STR-000001",
+            "badgeType": "LOCAL",
+            "requestDate": "2026-05-14T10:00:00",
+            "reviewDate": "2026-05-15T10:00:00",
+            "endDate": "2027-05-15T10:00:00",
+            "status": "APPROVED",
+            "notes": "Telah diverifikasi sebagai produk asli UMKM lokal."
+          }
+        ]';
 
-        foreach ($stores as $store) {
-            // Simulasi: Beri peluang 70% bahwa toko ini pernah mengajukan badge
-            if (rand(1, 100) <= 70) {
-                
-                // Acak status pengajuannya agar data bervariasi
-                $statusOptions = ['PENDING', 'APPROVED', 'REJECTED'];
-                $status = $statusOptions[array_rand($statusOptions)];
+        $badges = json_decode($jsonString, true);
 
-                // Buat tanggal pengajuan (mundur beberapa hari ke belakang)
-                $requestDate = Carbon::now()->subDays(rand(10, 30));
-                
-                // Jika statusnya bukan PENDING, berarti sudah direview beberapa hari setelah request
-                $reviewDate = $status !== 'PENDING' ? (clone $requestDate)->addDays(rand(1, 3)) : null;
-                
-                // Jika APPROVED, masa berlakunya 1 tahun dari tanggal review
-                $endDate = $status === 'APPROVED' ? (clone $reviewDate)->addYear() : null;
+        // 2. Alur validasi dan eksekusi
+        foreach ($badges as $data) {
+            // Validasi: Pastikan toko yang mengajukan badge benar-benar ada di database
+            $storeExists = Store::where('idStore', $data['idStore'])->exists();
 
-                // Tentukan catatan admin berdasarkan status
-                $notes = match($status) {
-                    'APPROVED' => 'Telah diverifikasi sebagai produk asli UMKM lokal.',
-                    'REJECTED' => 'Dokumen izin usaha UMKM tidak lengkap atau tidak valid.',
-                    'PENDING'  => 'Menunggu pengecekan dokumen oleh tim admin.',
-                };
-
+            // Eksekusi jika relasi toko valid
+            if ($storeExists) {
                 BadgeVerification::create([
-                    'idBadge'     => 'BDG-' . str_pad($counter++, 6, '0', STR_PAD_LEFT),
-                    'idStore'     => $store->idStore,
-                    'badgeType'   => 'LOCAL',
-                    'requestDate' => $requestDate,
-                    'reviewDate'  => $reviewDate,
-                    'endDate'     => $endDate,
-                    'status'      => $status,
-                    'notes'       => $notes,
+                    'idBadge'     => $data['idBadge'],
+                    'idStore'     => $data['idStore'],
+                    'badgeType'   => $data['badgeType'],
+                    'requestDate' => $data['requestDate'],
+                    'reviewDate'  => $data['reviewDate'],
+                    'endDate'     => $data['endDate'],
+                    'status'      => $data['status'],
+                    'notes'       => $data['notes'],
                 ]);
+            } else {
+                // Opsional: Logika jika data gagal dimasukkan karena toko tidak ditemukan
+                // echo "Gagal menambah Badge: Toko dengan ID {$data['idStore']} tidak ditemukan.\n";
             }
         }
     }
