@@ -32,11 +32,11 @@ return new class extends Migration
             
             // Catatan dan Pembayaran
             $table->string('buyerNote')->nullable();
-            // Pastikan kolom paymentId ada
-            $table->string('paymentId')->nullable();
+            // Pastikan kolom idPayment ada
+            $table->string('idPayment')->nullable();
 
             // Tambahkan foreign key ini di bagian bawah definisi tabel
-            $table->foreign('paymentId')->references('idPayment')->on('payments')->onDelete('set null');
+            $table->foreign('idPayment')->references('idPayment')->on('payments')->onDelete('set null');
 
             // Definisi Relasi
             $table->foreign('idUser')->references('idUser')->on('users')->onDelete('cascade');

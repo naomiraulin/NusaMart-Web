@@ -29,4 +29,9 @@ class Shipping extends Model
     {
         return $this->belongsTo(CourierOption::class, 'idCourier', 'idCourier');
     }
+
+    public function shippingTrackings()
+    {
+        return $this->hasMany(ShippingTracking::class, 'idShipping', 'idShipping');
+    }
 }

@@ -25,15 +25,17 @@ class RoomChat extends Model
     /**
      * Relasi ke User sebagai Pembeli (User 1)
      */
-    public function buyer()
+    public function chats()
+    {
+        return $this->hasMany(Chat::class, 'idRoom', 'idRoom');
+    }
+
+    public function user1()
     {
         return $this->belongsTo(User::class, 'idUser1', 'idUser');
     }
 
-    /**
-     * Relasi ke User sebagai Penjual (User 2)
-     */
-    public function seller()
+    public function user2()
     {
         return $this->belongsTo(User::class, 'idUser2', 'idUser');
     }

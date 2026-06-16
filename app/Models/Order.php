@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['idOrder', 'idUser', 'idStore', 'productTotalPrice', 'shippingCost', 'servicePrice', 'grandTotal', 'orderStatus', 'invoiceNumber', 'idAddress', 'orderDate', 'arrivedDate', 'buyerNote', 'paymentId'])]
+#[Fillable(['idOrder', 'idUser', 'idStore', 'productTotalPrice', 'shippingCost', 'servicePrice', 'grandTotal', 'orderStatus', 'invoiceNumber', 'idAddress', 'orderDate', 'arrivedDate', 'buyerNote', 'idPayment'])]
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
@@ -41,5 +41,15 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class, 'idOrder', 'idOrder');
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class, 'idPayment', 'idPayment');
+    }
+
+    public function shipping()
+    {
+        return $this->hasOne(Shipping::class, 'idOrder', 'idOrder');
     }
 }
