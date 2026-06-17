@@ -102,4 +102,15 @@ class PaymentService
 
         return $payment->fresh();
     }
+
+    public function findById(string $id): Payment
+    {
+        $payment = $this->paymentRepository->findById($id);
+
+        if (!$payment) {
+            abort(404, 'Pembayaran tidak ditemukan.');
+        }
+
+        return $payment;
+    }
 }
