@@ -20,7 +20,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-04-01T10:00:00',
                 'updateAt'      => '2026-05-14T20:00:00',
-                'avgRating'     => 4.9
+                'avgRating'     => 4.9,
             ],
             [
                 'idProduct'     => 'PRD-000002',
@@ -42,7 +42,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-05-01T08:00:00',
                 'updateAt'      => '2026-05-14T08:00:00',
-                'avgRating'     => 4.9,
+                'avgRating'     => 4.5,
             ],
             [
                 'idProduct'     => 'PRD-000004',
@@ -64,7 +64,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-04-25T09:00:00',
                 'updateAt'      => '2026-05-11T13:00:00',
-                'avgRating'     => 4.8,
+                'avgRating'     => 4.0,
             ],
             [
                 'idProduct'     => 'PRD-000006',
@@ -75,7 +75,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-05-05T14:00:00',
                 'updateAt'      => '2026-05-14T10:00:00',
-                'avgRating'     => 4.6,
+                'avgRating'     => 3.5,
             ],
             [
                 'idProduct'     => 'PRD-000007',
@@ -86,7 +86,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-05-08T08:00:00',
                 'updateAt'      => '2026-05-14T09:00:00',
-                'avgRating'     => 5.0,
+                'avgRating'     => 4.0,
             ],
             [
                 'idProduct'     => 'PRD-000008',
@@ -97,7 +97,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-05-10T10:00:00',
                 'updateAt'      => '2026-05-14T11:00:00',
-                'avgRating'     => 4.7,
+                'avgRating'     => 2.0,
             ],
             [
                 'idProduct'     => 'PRD-000009',
@@ -108,7 +108,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-05-12T15:00:00',
                 'updateAt'      => '2026-05-14T15:00:00',
-                'avgRating'     => 4.9,
+                'avgRating'     => 5.0,
             ],
             [
                 'idProduct'     => 'PRD-000010',
@@ -119,7 +119,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-05-13T09:00:00',
                 'updateAt'      => '2026-05-14T16:00:00',
-                'avgRating'     => 4.8,
+                'avgRating'     => 4.5,
             ],
         ];
 
