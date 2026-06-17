@@ -4,10 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ProductController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 // Homepage - Langsung menampilkan produk
 Route::get('/', [ProductController::class, 'index'])->name('home');
 
@@ -27,7 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Lanjut menambahkan route /cart dan /checkout di dalam sini
-    
+
     // Khusus Seller
     Route::prefix('seller')->middleware('role:SELLER')->group(function () {
         // Route ke dashboard seller yang dibuat di awal tadi diletakkan di sini

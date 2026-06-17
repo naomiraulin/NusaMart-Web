@@ -19,7 +19,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $label }}</label>
         @endif
         <input type="text" name="{{ $name }}" value="{{ $value }}" placeholder="{{ $placeholder }}"
-            {{ $attributes->merge(['class' => 'w-full border border-gray-300 rounded-md p-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm']) }}>
+            {{ $attributes->merge(['class' => 'w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm']) }}>
     </div>
 
 {{-- 3. ELEMEN CARD DASHBOARD --}}

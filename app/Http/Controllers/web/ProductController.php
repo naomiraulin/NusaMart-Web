@@ -12,12 +12,14 @@ class ProductController extends Controller
     public function index()
     {
         // Ambil produk dengan Eager Loading, limit 20 produk untuk homepage
-        $products = Product::with(['productItems', 'productImages'])
+        // Catatan: 'store' ditambahkan supaya nama toko / kota bisa ditampilkan
+        // tanpa memicu N+1 query di view.
+        $products = Product::with(['productItems', 'productImages', 'store'])
                            ->where('productStatus', 'ACTIVE')
                            ->latest('createAt')
                            ->take(20)
                            ->get();
-                           
+
         // Arahkan ke resources/views/welcome.blade.php sambil membawa data $products
         return view('welcome', compact('products'));
     }
@@ -26,7 +28,7 @@ class ProductController extends Controller
     public function show(string $id)
     {
         $product = Product::with(['productImages', 'subCategories'])->where('idProduct', $id)->firstOrFail();
-        
+
         $items = $product->productItems()->with('productVariations')->where('isActive', true)->get();
 
         $itemsWithVariations = $items->map(function ($item) {
