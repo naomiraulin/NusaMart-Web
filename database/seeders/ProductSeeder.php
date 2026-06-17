@@ -20,7 +20,7 @@ class ProductSeeder extends Seeder
                 'productStatus' => 'ACTIVE',
                 'createAt'      => '2026-04-01T10:00:00',
                 'updateAt'      => '2026-05-14T20:00:00',
-                'avgRating'     => 4.9,
+                'avgRating'     => 4.9
             ],
             [
                 'idProduct'     => 'PRD-000002',

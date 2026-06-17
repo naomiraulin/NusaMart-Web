@@ -3,99 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome - NusaMart</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        nusa: {
-                            light: '#E0F2F1',
-                            DEFAULT: '#008B81',
-                            dark: '#00736B',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <title>Masuk - NusaMart</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        /* Animasi sederhana untuk elemen melayang di background */
         @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
+            0%   { transform: translate(0px, 0px) scale(1); }
+            33%  { transform: translate(30px, -50px) scale(1.1); }
+            66%  { transform: translate(-20px, 20px) scale(0.9); }
             100% { transform: translate(0px, 0px) scale(1); }
         }
-        .animate-blob {
-            animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-            animation-delay: 4s;
-        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
     </style>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen relative overflow-hidden font-sans">
+<body class="bg-gray-50 min-h-screen flex flex-col antialiased">
 
-    <div class="absolute top-0 w-full py-6 px-10 flex justify-between items-center z-20">
-        <h1 class="text-2xl font-bold text-nusa tracking-wider">NusaMart</h1>
-        <nav class="hidden md:flex space-x-6 text-sm font-semibold text-gray-600 uppercase tracking-widest">
-            <a href="{{ route('home') }}" class="hover:text-nusa transition">Home</a>
-            <a href="#" class="hover:text-nusa transition">Services</a>
-            <a href="#" class="hover:text-nusa transition">About Us</a>
-        </nav>
-    </div>
-
-    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-full flex justify-center items-center opacity-60 pointer-events-none z-0">
-        <div class="absolute top-20 left-10 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-2xl animate-blob"></div>
-        <div class="absolute top-20 right-10 w-72 h-72 bg-nusa-light rounded-full mix-blend-multiply filter blur-2xl animate-blob animation-delay-2000"></div>
-        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-2xl animate-blob animation-delay-4000"></div>
-        
-        <img src="https://via.placeholder.com/400x400.png?text=Ilustrasi+NusaMart" alt="Ilustrasi" class="absolute -right-20 bottom-10 w-96 h-96 object-contain drop-shadow-2xl z-10 hidden lg:block">
-    </div>
-
-    <div class="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-md p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,139,129,0.15)] border border-white/50 text-center mx-4">
-        
-        <h2 class="text-3xl font-extrabold text-nusa mb-8 tracking-wide">WELCOME!</h2>
-
-        @if($errors->any())
-            <div class="bg-red-50 text-red-500 py-2 px-4 rounded-full text-sm mb-6 shadow-sm">
-                {{ $errors->first() }}
-            </div>
-        @endif
-
-        <form action="{{ route('login') }}" method="POST" class="space-y-5">
-            @csrf
-            
-            <div>
-                <input type="text" name="emailOrUsername" value="{{ old('emailOrUsername') }}" placeholder="USERNAME OR EMAIL" required 
-                    class="w-full bg-transparent border-2 border-nusa/30 rounded-full py-3 px-6 text-center text-sm font-semibold text-gray-700 placeholder-gray-400 focus:border-nusa focus:bg-white focus:outline-none focus:ring-0 transition-all">
-            </div>
-            
-            <div>
-                <input type="password" name="password" placeholder="PASSWORD" required 
-                    class="w-full bg-transparent border-2 border-nusa/30 rounded-full py-3 px-6 text-center text-sm font-semibold text-gray-700 placeholder-gray-400 focus:border-nusa focus:bg-white focus:outline-none focus:ring-0 transition-all">
-            </div>
-
-            <div class="text-center pt-2">
-                <a href="#" class="text-xs font-medium text-gray-400 hover:text-nusa transition">Forgot Password?</a>
-            </div>
-            
-            <button type="submit" class="w-2/3 mx-auto block bg-nusa hover:bg-nusa-dark text-white font-bold py-3 px-8 rounded-full shadow-[0_10px_20px_rgba(0,139,129,0.3)] hover:shadow-[0_10px_25px_rgba(0,139,129,0.5)] transform hover:-translate-y-0.5 transition-all uppercase tracking-wider text-sm mt-4">
-                Login
-            </button>
-        </form>
-
-        <div class="mt-8">
-            <a href="{{ route('register') }}" class="text-xs font-bold text-nusa hover:text-nusa-dark uppercase tracking-wider transition border-b border-transparent hover:border-nusa">
-                Create Account
-            </a>
+    {{-- ====== HEADER ====== --}}
+    <header class="bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-8 h-16 flex items-center justify-center">
+            {{-- Ganti dengan:
+                <img src="{{ asset('images/logo.png') }}" alt="NusaMart" class="h-8 object-contain">
+            --}}
+            <a href="{{ route('home') }}" class="text-2xl font-bold text-nusa tracking-tight">NusaMart</a>
         </div>
+    </header>
+
+    {{-- ====== BACKGROUND BLOBS ====== --}}
+    <div class="fixed inset-0 flex justify-center items-center opacity-40 pointer-events-none z-0">
+        <div class="absolute top-1/4 left-1/4 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-2xl animate-blob"></div>
+        <div class="absolute top-1/4 right-1/4 w-72 h-72 bg-nusa-light rounded-full mix-blend-multiply filter blur-2xl animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-1/4 left-1/3 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-2xl animate-blob animation-delay-4000"></div>
     </div>
 
+    {{-- ====== MAIN CONTENT ====== --}}
+    <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto px-8 py-12 flex items-center justify-between gap-12">
+
+        {{-- ===== KOLOM KIRI: Ilustrasi & Copy ===== --}}
+        <div class="hidden lg:flex flex-col justify-center flex-1 sticky top-24">
+            <div class="mb-8">
+                <span class="text-xs font-semibold tracking-widest text-nusa uppercase">Marketplace Lokal #1</span>
+                <h2 class="text-4xl font-bold text-gray-900 mt-3 leading-snug">
+                    Selamat Datang!
+                </h2>
+                <p class="text-gray-500 mt-4 text-base leading-relaxed max-w-xs">
+                    Masuk dan temukan ribuan produk lokal pilihan.
+                </p>
+            </div>
+
+            {{-- Ganti dengan: <img src="{{ asset('images/ilustrasi-login.svg') }}" ...> --}}
+            <img
+                src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6d2.svg"
+                alt="Ilustrasi Belanja"
+                class="w-64 h-64 object-contain opacity-80"
+            >
+
+            <div class="mt-8 flex gap-6 text-sm text-gray-400">
+                <div class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-nusa" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    Gratis Daftar
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-nusa" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    Transaksi Aman
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-nusa" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    Produk Lokal Asli
+                </div>
+            </div>
+        </div>
+
+        {{-- ===== KOLOM KANAN: Form Login ===== --}}
+        <div class="w-full lg:w-[480px] flex-shrink-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+
+                <div class="mb-7">
+                    <h1 class="text-2xl font-bold text-gray-900">Login</h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Belum punya akun?
+                        <a href="{{ route('register') }}" class="text-nusa font-semibold hover:underline">Daftar di sini</a>
+                    </p>
+                </div>
+
+                @if($errors->any())
+                    <div class="bg-red-50 border border-red-200 text-red-600 p-3.5 rounded-lg text-sm mb-6">
+                        <ul class="list-disc list-inside space-y-0.5">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('login') }}" method="POST" class="space-y-4">
+                    @csrf
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Username atau Email</label>
+                        <input
+                            type="text"
+                            name="emailOrUsername"
+                            value="{{ old('emailOrUsername') }}"
+                            placeholder="contoh: budi_santoso"
+                            required
+                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white"
+                        >
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <a href="#" class="text-xs text-nusa hover:underline">Lupa password?</a>
+                        </div>
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Masukkan password"
+                            required
+                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white"
+                        >
+                    </div>
+
+                    <div class="pt-2">
+                        <button
+                            type="submit"
+                            class="w-full bg-nusa hover:bg-nusa-dark text-white font-semibold py-3 rounded-xl transition-colors duration-200 text-sm tracking-wide"
+                        >
+                            Masuk
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+            <p class="text-center text-xs text-gray-400 mt-6">© NusaMart 2026 · Platform Produk Lokal Indonesia</p>
+        </div>
+
+    </main>
 </body>
 </html>
