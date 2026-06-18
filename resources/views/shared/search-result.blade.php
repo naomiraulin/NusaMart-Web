@@ -11,17 +11,17 @@
         {{-- Info Hasil Pencarian --}}
         <div>
             <h1 class="text-xl font-semibold text-gray-900">
-                Hasil Pencarian: <span class="text-nusa font-bold">"{{ $search }}"</span>
+                Hasil Pencarian: <span class="text-nusa font-bold">"{{ $search ?? '' }}"</span>
             </h1>
             <p class="text-sm text-gray-500 mt-1">
-                Menemukan {{ $products->total() ?? $products->count() }} produk yang sesuai.
+                Menemukan {{ method_exists($products, 'total') ? $products->total() : $products->count() }} produk yang sesuai.
             </p>
         </div>
 
         {{-- Form Filter --}}
         <form action="{{ route('products.search') }}" method="GET" class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-4">
             {{-- Menyimpan kata kunci pencarian --}}
-            <input type="hidden" name="search" value="{{ $search }}">
+            <input type="hidden" name="search" value="{{ $search ?? '' }}">
 
             {{-- Filter Urutkan (Style Chips) --}}
             <div class="flex flex-wrap items-center gap-2">

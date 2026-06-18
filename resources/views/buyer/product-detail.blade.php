@@ -4,6 +4,9 @@
     // Logika mengecek apakah produk memiliki lebih dari 1 variasi, atau 1 variasi tapi bukan "Default"
     $hasVariations = $product->productItems->count() > 1 || 
                      ($product->productItems->count() == 1 && $product->productItems->first()->productVariations->isNotEmpty());
+
+    // Logika mengecek apakah toko penjual sudah memiliki badge VERIFIED yang disetujui
+    $isStoreVerified = $product->store && $product->store->badgeVerifications && $product->store->badgeVerifications->where('status', 'APPROVED')->isNotEmpty();
 @endphp
 
 <x-dynamic-component :component="$layout">
@@ -58,9 +61,7 @@
                 <div class="relative aspect-square rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm group">
                     <img :src="mainImage" alt="{{ $product->productName }}" 
                          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                    <span class="absolute top-3 left-3 bg-white/80 backdrop-blur-md text-[10px] tracking-widest font-bold uppercase px-3 py-1 rounded-full shadow-sm border border-white/50 text-gray-700">
-                        NusaMart Verified
-                    </span>
+                    {{-- Badge NusaMart Verified di foto produk SUDAH DIHAPUS --}}
                 </div>
 
                 <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
@@ -126,13 +127,25 @@
                 {{-- INFO TOKO & TOMBOL CHAT --}}
                 <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
                     <div class="flex items-center gap-3.5">
-                        <a href="/toko/{{ $product->store->idStore ?? '' }}" class="shrink-0 group">
-                            <div class="w-12 h-12 bg-gradient-to-tr from-nusa to-nusa-dark text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm group-hover:scale-105 transition-transform">
-                                {{ strtoupper(substr($product->store->name ?? 'T', 0, 1)) }}
-                            </div>
-                        </a>
+                        {{-- Bungkus foto profil dan badge dalam flex-col agar turun ke bawah --}}
+                        <div class="flex flex-col items-center gap-1.5 shrink-0">
+                            <a href="{{ route('store.detail', $product->store->idStore ?? '') }}" class="group">
+                                <div class="w-12 h-12 bg-gradient-to-tr from-nusa to-nusa-dark text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm group-hover:scale-105 transition-transform">
+                                    {{ strtoupper(substr($product->store->name ?? 'T', 0, 1)) }}
+                                </div>
+                            </a>
+                            
+                            {{-- Badge Verified Local yang akan muncul hanya jika di database disetujui --}}
+                            @if($isStoreVerified)
+                                <span class="bg-nusa/10 text-nusa text-[8px] tracking-widest font-bold uppercase px-1.5 py-0.5 rounded-md flex items-center gap-0.5 border border-nusa/20 whitespace-nowrap">
+                                    <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    Verified Local
+                                </span>
+                            @endif
+                        </div>
+                        
                         <div>
-                            <a href="/toko/{{ $product->store->idStore ?? '' }}" class="hover:underline decoration-nusa decoration-2 underline-offset-2">
+                            <a href="{{ route('store.detail', $product->store->idStore ?? '') }}" class="hover:underline decoration-nusa decoration-2 underline-offset-2">
                                 <h4 class="font-bold text-gray-900 text-sm leading-tight hover:text-nusa transition-colors">{{ $product->store->name ?? 'Toko Tidak Ditemukan' }}</h4>
                             </a>
                             <p class="text-xs text-gray-400 font-medium mt-0.5">{{ $product->store->location ?? 'Lokasi tidak diketahui' }}</p>
@@ -150,6 +163,11 @@
                                 </button>
                             </form>
                         @endif
+                    @else
+                        <a href="{{ route('login') }}" class="px-3.5 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:text-nusa hover:border-nusa/30 transition-all duration-200 font-semibold text-xs flex items-center gap-2 shadow-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                            Chat
+                        </a>
                     @endauth
                 </div>
             </div>

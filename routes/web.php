@@ -8,6 +8,8 @@ use App\Http\Controllers\Web\Seller\DashboardController;
 use App\Http\Controllers\Web\Seller\StoreController;
 use App\Http\Controllers\Web\Shared\ProfileController;
 use App\Http\Controllers\Web\Shared\ChatController;
+use App\Http\Controllers\Web\Shared\StoreDetailController;
+use App\Http\Controllers\Web\Buyer\OrderController as BuyerOrderController;
 
 // Homepage - Langsung menampilkan produk
 Route::get('/', [ProductController::class, 'index'])->name('home');
@@ -17,6 +19,8 @@ Route::get('/search', [ProductController::class, 'search'])->name('products.sear
 
 // Detail Produk
 Route::get('/produk/{id}', [ProductController::class, 'show'])->name('product.detail');
+
+Route::get('/toko/{id}', [StoreDetailController::class, 'show'])->name('store.detail');
 
 // Route khusus pengunjung yang BELUM LOGIN (Guest)
 Route::middleware('guest')->group(function () {
@@ -60,10 +64,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/{cartItemId}', [\App\Http\Controllers\Web\Buyer\CartController::class, 'remove'])->name('cart.remove');
 
     // --- Pesanan Saya / Orders Buyer (PLACEHOLDER) ---
-    // TODO: ganti closure ini dengan OrderController@index begitu sudah dibuat.
-    Route::get('/orders', function () {
-        return view('orders.index'); // TODO: buat view resources/views/orders/index.blade.php
-    })->name('buyer.orders.index');
+    Route::get('/orders', [BuyerOrderController::class, 'index'])->name('buyer.orders.index');
+    Route::get('/orders/{id}', [BuyerOrderController::class, 'show'])->name('buyer.orders.show');
+    Route::get('/checkout', [BuyerOrderController::class, 'checkout'])->name('buyer.orders.checkout');
+    Route::post('/checkout', [BuyerOrderController::class, 'placeOrder'])->name('buyer.orders.placeOrder');
+    Route::post('/orders/{id}/cancel', [BuyerOrderController::class, 'cancel'])->name('buyer.orders.cancel');
 
     // Khusus Seller
     Route::prefix('seller')->middleware('role:SELLER')->group(function () {

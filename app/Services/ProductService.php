@@ -203,7 +203,8 @@ class ProductService
             // Misalnya kita urutkan berdasarkan produk terbaru dari ID-nya:
             $query->orderBy('idProduct', 'desc'); 
         }
-
+        
+        return $query->paginate(12);
         
     }
 }
