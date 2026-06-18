@@ -119,35 +119,47 @@
                 </div>
 
                 {{-- ====== FORM ====== --}}
-                <form action="{{ route('register') }}" method="POST" class="space-y-4">
+                <form id="registerForm" action="{{ route('register') }}" method="POST" class="space-y-4" novalidate>
                     @csrf
                     <input type="hidden" name="role" id="roleInput" value="{{ old('role', 'BUYER') }}">
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                    <div class="input-wrapper">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Username <span class="text-red-500">*</span></label>
                         <input type="text" name="username" value="{{ old('username') }}" placeholder="contoh: budi_santoso" required
                             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                        <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">Username wajib diisi.</p>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                    <div class="input-wrapper">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Email <span class="text-red-500">*</span></label>
                         <input type="email" name="email" value="{{ old('email') }}" placeholder="email@contoh.com" required
                             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                        <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">Email wajib diisi.</p>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nomor HP</label>
+                    <div class="input-wrapper">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nomor HP <span class="text-red-500">*</span></label>
                         <div class="flex gap-2">
                             <span class="flex items-center px-3 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-500 font-medium">+62</span>
                             <input type="text" name="phone" value="{{ old('phone') }}" placeholder="812-3456-7890" required
                                 class="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
                         </div>
+                        <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">Nomor HP wajib diisi.</p>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-                        <input type="password" name="password" placeholder="Minimal 8 karakter" required
-                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                    <div class="input-wrapper">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Password <span class="text-red-500">*</span></label>
+                        <div class="relative w-full">
+                            <input type="password" id="passwordInput" name="password" placeholder="Minimal 8 karakter" required
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 pr-12 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-nusa-dark focus:outline-none z-10 cursor-pointer">
+                                <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">Password wajib diisi.</p>
                     </div>
 
                     {{-- ====== SELLER FIELDS ====== --}}
@@ -159,21 +171,24 @@
                             <div class="h-px flex-1 bg-gray-200"></div>
                         </div>
                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">NIK <span class="text-gray-400 font-normal">(16 digit)</span></label>
+                            <div class="input-wrapper">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">NIK <span class="text-gray-400 font-normal">(16 digit)</span> <span class="text-red-500">*</span></label>
                                 <input type="text" name="nik" value="{{ old('nik') }}" placeholder="3271xxxxxxxxxxxx" maxlength="16"
                                     class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                                <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">NIK wajib diisi.</p>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Bank</label>
-                                    <input type="text" name="bankName" value="{{ old('bankName') }}" placeholder="BCA, Mandiri, BRI..."
+                                <div class="input-wrapper">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Bank <span class="text-red-500">*</span></label>
+                                    <input type="text" name="bankName" value="{{ old('bankName') }}" placeholder="BCA, Mandiri..."
                                         class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                                    <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">Bank wajib diisi.</p>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">No. Rekening</label>
+                                <div class="input-wrapper">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">No. Rekening <span class="text-red-500">*</span></label>
                                     <input type="text" name="accountNumber" value="{{ old('accountNumber') }}" placeholder="0123456789"
                                         class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                                    <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">Rekening wajib diisi.</p>
                                 </div>
                             </div>
                         </div>
@@ -194,7 +209,19 @@
 
     </main>
 
-    <script>        
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+
+            console.log("Tombol mata diklik! Tipe saat ini:", passwordInput.type);
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
+            }
+        }
+
         function switchRole(role) {
             const roleInput    = document.getElementById('roleInput');
             const sellerFields = document.getElementById('sellerFields');
@@ -226,6 +253,40 @@
         window.addEventListener('DOMContentLoaded', function () {
             const savedRole = document.getElementById('roleInput').value || 'BUYER';
             switchRole(savedRole);
+        });
+
+        // Script untuk validasi form sebelum dikirim
+        window.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('registerForm');
+
+            form.addEventListener('submit', function (event) {
+                let isValid = true;
+                
+                const requiredInputs = form.querySelectorAll('input[required]');
+
+                form.querySelectorAll('.error-text').forEach(el => el.classList.add('hidden'));
+                form.querySelectorAll('input').forEach(input => {
+                    input.classList.remove('border-red-500', 'bg-red-50');
+                });
+
+                // Cek satu per satu input yang wajib diisi
+                requiredInputs.forEach(input => {
+                    if (input.value.trim() === '') {
+                        isValid = false;
+                        input.classList.add('border-red-500', 'bg-red-50');
+                        
+                        const wrapper = input.closest('.input-wrapper');
+                        if (wrapper) {
+                            const errorText = wrapper.querySelector('.error-text');
+                            if (errorText) errorText.classList.remove('hidden');
+                        }
+                    }
+                });
+
+                if (!isValid) {
+                    event.preventDefault();
+                }
+            });
         });
     </script>
 </body>

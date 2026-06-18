@@ -2,7 +2,7 @@
     
     <div class="mb-6">
         <h2 class="text-2xl font-semibold text-gray-800">Selamat Datang, {{ Auth::user()->username ?? 'Seller' }}!</h2>
-        <p class="text-gray-500">Pantau performa toko lokalmu hari ini.</p>
+        <p class="text-gray-500">Pantau performa tokomu.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

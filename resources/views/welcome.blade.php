@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
+{{--
+    Halaman ini khusus untuk BUYER (sudah login) dan GUEST (belum login).
+    Seller punya dashboard sendiri di route /seller/... yang terpisah dari file ini.
+--}}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,12 +60,43 @@
                         </svg>
                     </a>
                     <div class="h-6 w-px bg-gray-200"></div>
-                    <a href="#" class="flex items-center gap-2 text-gray-700 hover:text-nusa transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12a4 4 0 100-8 4 4 0 000 8zM6 20a6 6 0 1112 0" />
-                        </svg>
-                        <span class="text-sm font-medium">{{ auth()->user()->username ?? auth()->user()->name }}</span>
-                    </a>
+
+                    {{-- DROPDOWN PROFIL: trigger via hover (CSS group), berisi logout --}}
+                    <div class="relative group">
+                        <button type="button" class="flex items-center gap-2 text-gray-700 hover:text-nusa transition cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12a4 4 0 100-8 4 4 0 000 8zM6 20a6 6 0 1112 0" />
+                            </svg>
+                            <span class="text-sm font-medium">{{ auth()->user()->username }}</span>
+                        </button>
+
+                        {{-- Jembatan tak terlihat supaya hover tidak putus saat kursor pindah dari tombol ke menu --}}
+                        <div class="absolute right-0 top-full h-2 w-full"></div>
+
+                        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-2
+                                    opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150 z-50">
+
+                            {{-- TODO: belum ada route profile, href diarahkan ke '#' sementara --}}
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-nusa transition">
+                                Profil Saya
+                            </a>
+
+                            {{-- TODO: belum ada route riwayat pesanan, href diarahkan ke '#' sementara --}}
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-nusa transition">
+                                Pesanan Saya
+                            </a>
+
+                            <hr class="my-1 border-gray-100">
+
+                            {{-- Logout wajib pakai form POST, sesuai route POST /logout di routes/web.php --}}
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition cursor-pointer">
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 @else
                     <a href="{{ route('login') }}" class="text-sm font-semibold text-nusa hover:text-nusa-dark transition">Log In</a>
                     <a href="{{ route('register') }}" class="text-sm font-semibold bg-nusa text-white px-4 py-2 rounded-md hover:bg-nusa-dark transition">Daftar</a>

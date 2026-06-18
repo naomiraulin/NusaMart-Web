@@ -9,7 +9,6 @@ use App\Models\Notification;
 use App\Services\UserService;
 use App\Services\IdGeneratorService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
@@ -113,15 +112,19 @@ class AuthController extends Controller
 
         // Lakukan pengecekan session auth
         if (Auth::attempt($credentials)) {
-            // Jika berhasil, regenerasi session untuk keamanan
             $request->session()->regenerate();
 
-            // Arahkan ke dashboard seller jika role-nya seller, atau ke homepage jika buyer
-            if (Auth::user()->role === 'SELLER') {
-                return redirect()->intended('/seller/dashboard');
+            $role = Auth::user()->role;
+
+            if ($role === 'SELLER') {
+                return redirect()->route('seller.dashboard');
             }
-            
-            return redirect()->intended('/');
+
+            if ($role === 'ADMIN') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('home');
         }
 
         // Jika gagal, kembalikan ke form login dengan pesan error

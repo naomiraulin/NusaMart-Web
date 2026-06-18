@@ -15,6 +15,16 @@ class ProductController extends Controller
     ) {}
 
     /**
+     * Halaman daftar semua produk (homepage).
+     */
+    public function index(): View
+    {
+        $products = $this->productService->getAll();
+
+        return view('welcome', compact('products'));
+    }
+
+    /**
      * Halaman detail produk.
      * Guest bisa akses — tombol keranjang conditional di view (@auth).
      */

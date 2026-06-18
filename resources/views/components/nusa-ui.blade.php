@@ -1,5 +1,5 @@
 @props([
-    'type' => 'button', // Default-nya adalah button jika tidak ditentukan
+    'type' => 'button',
     'label' => '',
     'name' => '',
     'value' => '',
@@ -8,7 +8,7 @@
 
 {{-- 1. ELEMEN BUTTON --}}
 @if($type === 'button')
-    <button {{ $attributes->merge(['class' => 'bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md font-medium transition duration-200 text-sm']) }}>
+    <button {{ $attributes->merge(['type' => 'submit', 'class' => 'bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md font-medium transition duration-200 text-sm']) }}>
         {{ $slot }}
     </button>
 

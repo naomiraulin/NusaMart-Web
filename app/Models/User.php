@@ -49,4 +49,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Seller::class, 'idSeller', 'idUser');
     }
+
+    public function getAuthIdentifierName(): string
+    {
+        return 'idUser';
+    }
+
+    public function getAuthIdentifier(): string
+    {
+        return $this->idUser;
+    }
 }

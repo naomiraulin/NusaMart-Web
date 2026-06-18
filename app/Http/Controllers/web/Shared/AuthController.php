@@ -36,6 +36,7 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): RedirectResponse
     {
+        dd('controller login reached', $request->validated());
         $result = $this->authService->login($request->validated());
 
         /** @var \Illuminate\Contracts\Auth\Authenticatable $user */

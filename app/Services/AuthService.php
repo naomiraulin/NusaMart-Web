@@ -90,17 +90,17 @@ class AuthService
      */
     public function login(array $data): array
     {
-        $user = User::where('email', $data['email'])->first();
+        $loginField = filter_var($data['emailOrUsername'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $user = User::where($loginField, $data['emailOrUsername'])->first();
 
         if (!$user || !Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Email atau password salah.'],
+                'emailOrUsername' => ['Email/username atau password salah.'],
             ]);
         }
 
-        // Hapus token lama supaya tidak numpuk
         $user->tokens()->delete();
-
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [
@@ -124,28 +124,26 @@ class AuthService
      */
     public function updateProfile(string $userId, array $data): User
     {
-        $updateData = [];
+        $user = User::where('idUser', $userId)->firstOrFail();
 
         if (!empty($data['username'])) {
-            $updateData['username'] = $data['username'];
+            $user->username = $data['username'];
         }
 
         if (!empty($data['phone'])) {
-            $updateData['phone'] = $data['phone'];
+            $user->phone = $data['phone'];
         }
 
         if (!empty($data['image_url'])) {
-            $updateData['imageURL'] = $data['image_url'];
+            $user->imageURL = $data['image_url'];
         }
 
         if (!empty($data['password'])) {
-            $updateData['password'] = Hash::make($data['password']);
+            $user->password = Hash::make($data['password']);
         }
 
-        $updateData['updateAt'] = now();
-
-        $user = User::findOrFail($userId);
-        $user->update($updateData);
+        $user->updateAt = now();
+        $user->save();
 
         return $user->fresh();
     }

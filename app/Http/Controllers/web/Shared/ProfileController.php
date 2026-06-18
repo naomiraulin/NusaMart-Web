@@ -33,11 +33,14 @@ class ProfileController extends Controller
         $request->validate([
             'username'  => ['sometimes', 'string', 'max:100'],
             'phone'     => ['sometimes', 'string', 'max:20'],
-            'password'  => ['sometimes', 'confirmed', 'min:8'],
+            'password'  => ['sometimes', 'nullable', 'confirmed', 'min:8'],
             'image'     => ['sometimes', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $data = $request->only(['username', 'phone', 'password']);
+        // Hanya ambil field yang benar-benar diisi (tidak null/kosong)
+        $data = array_filter($request->only(['username', 'phone', 'password']), function ($value) {
+            return $value !== null && $value !== '';
+        });
 
         if ($request->hasFile('image')) {
             $data['image_url'] = $request->file('image')->store(
