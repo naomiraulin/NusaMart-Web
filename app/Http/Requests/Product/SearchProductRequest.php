@@ -21,14 +21,12 @@ class SearchProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Nullable karena user bisa saja menekan tombol cari tanpa mengetik apa-apa
-            // Max 255 untuk mencegah user iseng memasukkan teks ribuan karakter yang memberatkan server
-            'search' => ['nullable', 'string', 'max:255'],
+            'search'    => ['nullable', 'string', 'max:255'],
             
-            // Nantinya kamu bisa menambahkan filter lain di sini jika diperlukan, contoh:
-            // 'category_id' => ['nullable', 'string', 'exists:categories,idCategory'],
-            // 'min_price'   => ['nullable', 'numeric', 'min:0'],
-            // 'max_price'   => ['nullable', 'numeric', 'gte:min_price'],
+            'sort'      => ['nullable', 'string', 'in:semua,termurah,termahal'],
+            
+            'min_price' => ['nullable', 'numeric', 'min:0'],
+            'max_price' => ['nullable', 'numeric', 'gte:min_price'],
         ];
     }
 

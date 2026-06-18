@@ -33,19 +33,19 @@
             </a>
 
             {{-- Search bar --}}
-            <form action="{{ route('home') }}" method="GET" class="flex-1 max-w-xl">
+            <form action="{{ route('products.search') }}" method="GET" class="flex-1 max-w-xl">
                 <div class="flex items-center gap-x-2 w-full">
-                    
+
                     <input type="text" name="search" value="{{ request('search') }}"
                         placeholder="Cari produk..."
                         class="flex-1 px-4 py-2.5 text-sm border border-gray-300 rounded-full outline-none bg-white focus:border-nusa focus:ring-1 focus:ring-nusa transition">
-                    
+
                     <button type="submit" class="bg-[#008080] hover:bg-nusa-dark px-5 py-2.5 rounded-full text-white transition flex items-center justify-center shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </button>
-                    
+
                 </div>
             </form>
 
@@ -115,20 +115,37 @@
         </div>
     </nav>
 
-    {{-- Flash message --}}
     @if(session('success'))
-        <div class="max-w-7xl mx-auto px-6 mt-4">
-            <div class="px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
-                {{ session('success') }}
-            </div>
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-init="setTimeout(() => show = false, 3000)"
+            x-transition.opacity
+            class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white text-sm rounded-lg shadow-lg px-4 py-3 flex items-center gap-4 max-w-md w-[90%]"
+        >
+            <span class="flex-1">{{ session('success') }}</span>
+            <button @click="show = false" class="text-green-200 hover:text-white flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="max-w-7xl mx-auto px-6 mt-4">
-            <div class="px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-                {{ session('error') }}
-            </div>
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-init="setTimeout(() => show = false, 3000)"
+            x-transition.opacity
+            class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white text-sm rounded-lg shadow-lg px-4 py-3 flex items-center gap-4 max-w-md w-[90%]"
+        >
+            <span class="flex-1">{{ session('error') }}</span>
+            <button @click="show = false" class="text-red-200 hover:text-white flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     @endif
 
@@ -149,7 +166,7 @@
         </div>
     </footer>
 
-    {{-- Alpine.js untuk dropdown --}}
+    {{-- Alpine.js untuk dropdown & toast --}}
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 </body>

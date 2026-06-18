@@ -1,7 +1,7 @@
 @php
     $layout = auth()->check() ? 'buyer-layout' : 'guest-layout';
     
-    // Cek murni dari backend: Apakah item > 1, ATAU ada 1 item tapi dia punya data variasi?
+    // Logika mengecek apakah produk memiliki lebih dari 1 variasi, atau 1 variasi tapi bukan "Default"
     $hasVariations = $product->productItems->count() > 1 || 
                      ($product->productItems->count() == 1 && $product->productItems->first()->productVariations->isNotEmpty());
 @endphp
@@ -9,18 +9,17 @@
 <x-dynamic-component :component="$layout">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
          x-data="{
-            // Memperbaiki pemanggilan imageURL yang benar
             mainImage: '{{ $product->productImages->first()->imageURL ?? 'https://placehold.co/600x600?text=No+Image' }}',
             
             items: {{ 
-                $product->productItems->map(fn($item) => [
-                    'id' => $item->idProductItem,
-                    'price' => (float) $item->price,
-                    'stock' => 12, // Sesuaikan dengan kolom stok di DB
-                    'label' => $item->productVariations->map(fn($v) => $v->variationValue)->implode(' / ') ?: 'Default',
-                    'imageURL' => $item->imageURL ?? null
-                ])->toJson() 
-            }},
+            $product->productItems->map(fn($item) => [
+                'id' => $item->idProductItem,
+                'price' => (float) $item->price,
+                'stock' => 12, // Sesuaikan dengan field stok jika ada
+                'label' => $item->productVariations->map(fn($v) => $v->value)->filter()->implode(' / ') ?: 'Default',
+                'imageURL' => $item->imageURL ?? null
+            ])->toJson() 
+        }},
             
             selectedItem: null,
             qty: 1,
@@ -101,7 +100,7 @@
                     </div>
                 </div>
 
-                {{-- VARIANT CHIPS DENGAN LOGIKA BLADE YANG PASTI HILANG JIKA KOSONG --}}
+                {{-- VARIANT CHIPS --}}
                 @if($hasVariations)
                     <div class="space-y-3">
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Pilih Variasi</label>
@@ -124,7 +123,7 @@
                     </p>
                 </div>
 
-                {{-- INFO TOKO DENGAN PEMANGGILAN NAMA YANG BENAR --}}
+                {{-- INFO TOKO & TOMBOL CHAT --}}
                 <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
                     <div class="flex items-center gap-3.5">
                         <a href="/toko/{{ $product->store->idStore ?? '' }}" class="shrink-0 group">
@@ -140,9 +139,10 @@
                         </div>
                     </div>
                     
+                    {{-- TOMBOL CHAT: Cek agar user tidak bisa chat dirinya sendiri --}}
                     @auth
-                        @if(auth()->user()->idUser != ($product->store->idUser ?? ''))
-                            <form action="{{ route('chat.openWithSeller', $product->store->idUser ?? 1) }}" method="POST">
+                        @if(auth()->user()->idUser != ($product->store->idSeller ?? ''))
+                            <form action="{{ route('chat.openWithSeller', $product->store->idSeller) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="px-3.5 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:text-nusa hover:border-nusa/30 transition-all duration-200 font-semibold text-xs flex items-center gap-2 shadow-sm">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -164,7 +164,7 @@
                         <div class="flex items-center gap-3">
                             <div class="flex items-center border border-gray-200 rounded-xl bg-gray-50/50 p-1">
                                 <button @click="if(qty > 1) qty--" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-white hover:text-nusa rounded-lg transition-all font-bold text-lg focus:outline-none">-</button>
-                                <input type="number" name="qty" x-model="qty" min="1" class="w-10 text-center bg-transparent border-none focus:ring-0 appearance-none text-sm font-bold text-gray-800" readonly>
+                                <input type="number" name="qty_display" x-model="qty" min="1" class="w-10 text-center bg-transparent border-none focus:ring-0 appearance-none text-sm font-bold text-gray-800" readonly>
                                 <button @click="if(selectedItem && qty < selectedItem.stock) qty++" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-white hover:text-nusa rounded-lg transition-all font-bold text-lg focus:outline-none">+</button>
                             </div>
                             <div class="text-xs text-gray-400 font-medium">
@@ -185,7 +185,6 @@
                             {{-- FORM TAMBAH KE KERANJANG --}}
                             <form action="{{ route('buyer.cart.add') }}" method="POST" class="w-full">
                                 @csrf
-                                {{-- Alpine.js akan mengisi value input hidden ini secara dinamis --}}
                                 <input type="hidden" name="idProductItem" :value="selectedItem ? selectedItem.id : ''">
                                 <input type="hidden" name="qty" :value="qty">
                                 
@@ -195,7 +194,7 @@
                                 </button>
                             </form>
                             
-                            {{-- FORM BELI LANGSUNG (Opsional, diarahkan ke checkout) --}}
+                            {{-- FORM BELI LANGSUNG --}}
                             <form action="#" method="POST" class="w-full">
                                 @csrf
                                 <input type="hidden" name="idProductItem" :value="selectedItem ? selectedItem.id : ''">
@@ -250,6 +249,5 @@
                 @endforelse
             </div>
         </div>
-
     </div>
 </x-dynamic-component>

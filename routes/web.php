@@ -55,9 +55,9 @@ Route::middleware('auth')->group(function () {
     // --- Cart (PLACEHOLDER) ---
     // TODO: ganti closure ini dengan CartController@index begitu sudah dibuat.
     Route::post('/cart/add', [App\Http\Controllers\Web\Buyer\CartController::class, 'store'])->name('buyer.cart.add');
-    Route::get('/cart', function () {
-        return view('cart.index'); // TODO: buat view resources/views/cart/index.blade.php
-    })->name('buyer.cart.index');
+    Route::get('/cart', [\App\Http\Controllers\Web\Buyer\CartController::class, 'index'])->name('buyer.cart.index');
+    Route::put('/cart/{cartItemId}', [\App\Http\Controllers\Web\Buyer\CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{cartItemId}', [\App\Http\Controllers\Web\Buyer\CartController::class, 'remove'])->name('cart.remove');
 
     // --- Pesanan Saya / Orders Buyer (PLACEHOLDER) ---
     // TODO: ganti closure ini dengan OrderController@index begitu sudah dibuat.
@@ -77,6 +77,11 @@ Route::middleware('auth')->group(function () {
 
         // Produk
         Route::get('/products', [\App\Http\Controllers\Web\Seller\ProductController::class, 'index'])->name('seller.products.index');
+        Route::get('/products/create', [\App\Http\Controllers\Web\Seller\ProductController::class, 'create'])->name('seller.products.create');
+        Route::post('/products', [\App\Http\Controllers\Web\Seller\ProductController::class, 'store'])->name('seller.products.store');
+        Route::get('/products/{id}/edit', [\App\Http\Controllers\Web\Seller\ProductController::class, 'edit'])->name('seller.products.edit');
+        Route::put('/products/{id}', [\App\Http\Controllers\Web\Seller\ProductController::class, 'update'])->name('seller.products.update');
+        Route::delete('/products/{id}', [\App\Http\Controllers\Web\Seller\ProductController::class, 'destroy'])->name('seller.products.destroy');
 
         // Pesanan
         Route::get('/orders', [\App\Http\Controllers\Web\Seller\OrderController::class, 'index'])->name('seller.orders.index');

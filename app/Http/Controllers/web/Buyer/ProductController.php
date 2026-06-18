@@ -29,18 +29,19 @@ class ProductController extends Controller
      * Halaman hasil pencarian produk.
      * Dapat diakses oleh Guest maupun Buyer.
      */
+    /**
+     * Halaman hasil pencarian produk dengan filter.
+     */
     public function search(SearchProductRequest $request): View
     {
-        $search = $request->input('search');
+        // 1. Ambil semua input dari form (termasuk sort, harga, dll) dalam bentuk ARRAY
+        $filters = $request->validated();
 
-        // 2. Jika input kosong, kembalikan ke view dengan data kosong
-        if (!$search) {
-            // 3. Samakan path view menjadi 'shared.search-result'
-            return view('shared.search-result', ['products' => collect(), 'search' => $search]);
-        }
+        // 2. Ambil kata kuncinya saja untuk ditampilkan di teks "Hasil Pencarian: ..." pada Blade
+        $search = $filters['search'] ?? '';
 
-        // 3. Panggil method pencarian dari ProductService
-        $products = $this->productService->searchProducts($search);
+        // 3. PANGGIL SERVICE DENGAN VARIABEL $filters (Ini yang memperbaiki error di baris 43)
+        $products = $this->productService->searchProducts($filters);
 
         // 4. Lempar data produk dan kata kunci ke view search-result
         return view('shared.search-result', compact('products', 'search'));

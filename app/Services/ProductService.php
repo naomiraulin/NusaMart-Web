@@ -70,7 +70,13 @@ class ProductService
 
             // 3. Attach subkategori
             if (!empty($subCategoryIds)) {
-                $product->subCategories()->attach($subCategoryIds);
+                foreach ($subCategoryIds as $subCatId) {
+                    \App\Models\ProductSubcategory::create([
+                        'idProductSubCat' => $this->idGenerator->generate('PSC', \App\Models\ProductSubcategory::class, 'idProductSubCat'),
+                        'idProduct'       => $product->idProduct,
+                        'idSubCategory'   => $subCatId,
+                    ]);
+                }
             }
 
             return $product->load(['productImages', 'subCategories']);
@@ -97,8 +103,18 @@ class ProductService
             }
 
             if (!empty($subCategoryIds)) {
-                $product->subCategories()->sync($subCategoryIds);
+            // Hapus yang lama dulu
+            \App\Models\ProductSubcategory::where('idProduct', $product->idProduct)->delete();
+            
+            // Insert yang baru
+            foreach ($subCategoryIds as $subCatId) {
+                \App\Models\ProductSubcategory::create([
+                    'idProductSubCat' => $this->idGenerator->generate('PSC', \App\Models\ProductSubcategory::class, 'idProductSubCat'),
+                    'idProduct'       => $product->idProduct,
+                    'idSubCategory'   => $subCatId,
+                ]);
             }
+        }
 
             return $product->load(['productImages', 'subCategories']);
         });
@@ -133,24 +149,61 @@ class ProductService
             $path = $image->store("products/{$productId}", 'public');
 
             \App\Models\ProductImage::create([
+                'idImage'   => $this->idGenerator->generate('IMG', \App\Models\ProductImage::class, 'idImage'),
                 'idProduct' => $productId,
                 'imageURL'  => $path,
-                'isPrimary' => $index === 0, // gambar pertama jadi primary
+                'isPrimary' => $index === 0,
             ]);
         }
     }
 
     /**
-     * Mencari produk berdasarkan kata kunci (productName).
+     * Mencari produk berdasarkan kata kunci dan filter (sort, min_price, max_price).
      * Diperuntukkan untuk halaman pencarian publik.
      */
-    public function searchProducts(string $keyword): LengthAwarePaginator
+    public function searchProducts(array $filters): LengthAwarePaginator
     {
-        // Gunakan Model Product langsung.
-        // Filter nama produk dengan clause LIKE
-        return Product::where('productName', 'like', '%' . $keyword . '%')
-            ->where('productStatus', 'ACTIVE') // Opsional: Pastikan hanya mencari produk yang statusnya ACTIVE
-            ->with(['productImages', 'productItems', 'store']) // Eager load relasi yang dipanggil di Blade
-            ->paginate(12);
+        // 1. Inisialisasi query dengan Eager Loading untuk mencegah N+1 query problem
+        $query = Product::with(['productImages', 'productItems', 'store']);
+
+        // Pastikan hanya mencari produk yang statusnya ACTIVE
+        // Catatan: Jika saat testing data tidak muncul, pastikan isi kolom productStatus
+        // di database kamu benar-benar huruf kapital 'ACTIVE'. Jika tidak, komentari baris ini sementara.
+        $query->where('productStatus', 'ACTIVE'); 
+
+        // 2. Filter Kata Kunci Pencarian
+        if (!empty($filters['search'])) {
+            $query->where('productName', 'like', '%' . $filters['search'] . '%');
+        }
+
+        // 3. Filter Harga Minimum
+        // Menggunakan whereHas untuk mencari harga di dalam tabel relasi productItems
+        if (isset($filters['min_price']) && $filters['min_price'] !== '') {
+            $query->whereHas('productItems', function ($q) use ($filters) {
+                $q->where('price', '>=', $filters['min_price']);
+            });
+        }
+
+        // 4. Filter Harga Maksimum
+        if (isset($filters['max_price']) && $filters['max_price'] !== '') {
+            $query->whereHas('productItems', function ($q) use ($filters) {
+                $q->where('price', '<=', $filters['max_price']);
+            });
+        }
+
+        // 5. Sorting (Pengurutan)
+        $sort = $filters['sort'] ?? 'semua';
+        
+        if ($sort === 'termurah') {
+            $query->withMin('productItems', 'price')->orderBy('product_items_min_price', 'asc');
+        } elseif ($sort === 'termahal') {
+            $query->withMax('productItems', 'price')->orderBy('product_items_max_price', 'desc');
+        } else {
+            // FIX: Ganti 'created_at' menjadi kolom yang pasti ada di tabel products kamu.
+            // Misalnya kita urutkan berdasarkan produk terbaru dari ID-nya:
+            $query->orderBy('idProduct', 'desc'); 
+        }
+
+        
     }
 }

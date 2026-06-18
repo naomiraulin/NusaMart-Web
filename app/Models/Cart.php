@@ -29,4 +29,12 @@ class Cart extends Model
     {
         return $this->belongsTo(User::class, 'idUser', 'idUser');
     }
+
+    /**
+     * Relasi ke CartItem (ditambahkan supaya $cart->cartItems bisa dipakai di view).
+     */
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class, 'idCart', 'idCart');
+    }
 }

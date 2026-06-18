@@ -33,7 +33,7 @@
             </a>
 
             {{-- Search bar --}}
-            <form action="{{ route('home') }}" method="GET" class="flex-1 max-w-xl">
+            <form action="{{ route('products.search') }}" method="GET" class="flex-1 max-w-xl">
                 <div class="flex items-center gap-x-2 w-full">
                     
                     <input type="text" name="search" value="{{ request('search') }}"

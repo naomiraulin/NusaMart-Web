@@ -7,159 +7,143 @@
         $authId = auth()->id();
         $room = \App\Models\RoomChat::find($roomId);
         $other = null;
-
         if ($room) {
-            $other = $room->idUser1 === $authId ? $room->user2 : $room->user1;
+            $other = $room->idUser1 === $authId
+                ? $room->user2
+                : $room->user1;
         }
     @endphp
 
-    <div class="flex h-[calc(100vh-64px)] flex-col bg-slate-50">
+    <div class="max-w-3xl mx-auto">
 
-        {{-- Header --}}
-        <div class="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
-            <div class="mx-auto flex max-w-4xl items-center gap-3">
+        {{-- Card percakapan --}}
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col" style="height: 70vh;">
+
+            {{-- Header lawan bicara --}}
+            <div class="flex-shrink-0 bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+                {{-- Tombol back --}}
                 <a href="{{ route('chat.index') }}"
-                   class="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-800">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </a>
 
+                {{-- Avatar lawan bicara --}}
                 @if ($other?->imageURL)
                     <img src="{{ $other->imageURL }}" alt="{{ $other->username }}"
-                         class="h-10 w-10 flex-shrink-0 rounded-full object-cover ring-2 ring-white shadow-sm">
+                        class="w-9 h-9 rounded-full object-cover flex-shrink-0">
                 @else
-                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold uppercase text-emerald-600 ring-2 ring-white shadow-sm">
+                    <div
+                        class="w-9 h-9 rounded-full bg-nusa-light flex items-center justify-center text-nusa font-semibold text-sm uppercase flex-shrink-0">
                         {{ mb_substr($other?->username ?? '?', 0, 1) }}
                     </div>
                 @endif
 
-                <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-2">
-                        <p class="truncate text-sm font-semibold text-gray-900">
-                            {{ $other?->username ?? 'Pengguna Dihapus' }}
-                        </p>
-
-                        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                            {{ auth()->user()->role === 'BUYER' ? 'Penjual' : 'Pembeli' }}
-                        </span>
-                    </div>
+                {{-- Nama --}}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-800 truncate">
+                        {{ $other?->username ?? 'Pengguna Dihapus' }}
+                    </p>
                 </div>
-
-                <button type="button" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-800">
-                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="5" r="1.8"></circle>
-                        <circle cx="12" cy="12" r="1.8"></circle>
-                        <circle cx="12" cy="19" r="1.8"></circle>
-                    </svg>
-                </button>
             </div>
-        </div>
 
-        {{-- Messages --}}
-        <div class="flex-1 overflow-y-auto bg-slate-50 px-4 py-5">
-            <div class="mx-auto flex max-w-4xl flex-col gap-3" id="chat-messages">
+            {{-- Area pesan --}}
+            <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50" id="chat-messages">
 
+                {{-- Load more (pagination) --}}
                 @if ($messages->hasMorePages())
-                    <div class="pb-2 text-center">
+                    <div class="text-center">
                         <a href="?page={{ $messages->currentPage() + 1 }}"
-                           class="inline-flex items-center rounded-full border border-emerald-200 bg-white px-4 py-2 text-xs font-medium text-emerald-600 shadow-sm transition hover:bg-emerald-50">
+                            class="inline-block text-xs text-nusa hover:text-nusa-dark font-medium bg-white border border-nusa/30 rounded-full px-4 py-1.5 hover:bg-nusa-light transition-colors">
                             Muat pesan sebelumnya
                         </a>
                     </div>
                 @endif
 
+                {{-- Pesan (dari oldest ke newest: reverse karena query desc) --}}
                 @foreach ($messages->getCollection()->reverse() as $chat)
                     @php $isMine = $chat->senderId === $authId; @endphp
 
                     <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }} gap-2">
+                        {{-- Avatar lawan (hanya tampil untuk pesan dari lawan) --}}
                         @if (!$isMine)
                             @if ($other?->imageURL)
                                 <img src="{{ $other->imageURL }}" alt="{{ $other->username }}"
-                                     class="mt-auto h-7 w-7 flex-shrink-0 rounded-full object-cover">
+                                    class="w-7 h-7 rounded-full object-cover flex-shrink-0 self-end mb-1">
                             @else
-                                <div class="mt-auto flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-bold uppercase text-emerald-600">
+                                <div
+                                    class="w-7 h-7 rounded-full bg-nusa-light flex items-center justify-center text-nusa font-bold text-xs uppercase flex-shrink-0 self-end mb-1">
                                     {{ mb_substr($other?->username ?? '?', 0, 1) }}
                                 </div>
                             @endif
                         @endif
 
-                        <div class="max-w-[72%] sm:max-w-[60%]">
+                        {{-- Bubble --}}
+                        <div class="max-w-xs lg:max-w-md group">
                             <div
-                                class="break-words rounded-2xl px-3 py-2 text-[14px] leading-relaxed shadow-sm
+                                class="px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words
                                 {{ $isMine
-                                    ? 'rounded-br-sm bg-emerald-500 text-white'
-                                    : 'rounded-bl-sm border border-gray-100 bg-white text-gray-800' }}">
+                                    ? 'bg-nusa text-white rounded-br-sm'
+                                    : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100' }}">
                                 {{ $chat->messageText }}
                             </div>
-
-                            <div class="mt-1 text-[10px] text-gray-400 {{ $isMine ? 'text-right' : 'text-left' }}">
+                            <p class="text-[10px] mt-1 text-gray-400 {{ $isMine ? 'text-right' : 'text-left' }}">
                                 {{ \Carbon\Carbon::parse($chat->createAt)->format('H:i') }}
                                 @if ($isMine)
-                                    <span class="ml-1">
-                                        @if ($chat->isRead)
-                                            <span class="text-emerald-400">✓✓</span>
-                                        @else
-                                            <span class="text-gray-300">✓</span>
-                                        @endif
-                                    </span>
+                                    &nbsp;
+                                    @if ($chat->isRead)
+                                        <span class="text-nusa">✓✓</span>
+                                    @else
+                                        <span class="text-gray-300">✓</span>
+                                    @endif
                                 @endif
-                            </div>
+                            </p>
                         </div>
                     </div>
                 @endforeach
 
+                {{-- Anchor untuk auto-scroll ke bawah --}}
                 <div id="chat-bottom"></div>
             </div>
-        </div>
 
-        {{-- Input --}}
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-1px_8px_rgba(0,0,0,0.03)]">
-            <div class="mx-auto max-w-4xl">
-                <form action="{{ route('chat.send', $roomId) }}" method="POST" class="flex items-end gap-2" id="chat-form">
+            {{-- Input pesan --}}
+            <div class="flex-shrink-0 bg-white border-t border-gray-200 px-4 py-3">
+                <form action="{{ route('chat.send', $roomId) }}" method="POST"
+                    class="flex items-end gap-2" id="chat-form">
                     @csrf
 
-                    <button type="button"
-                        class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                  d="M14.5 4.5l5 5M4 20l6.5-1.5L20 9a3.536 3.536 0 00-5-5l-9.5 9.5L4 20z" />
-                        </svg>
-                    </button>
-
-                    <div class="relative flex-1">
-                        <textarea
-                            name="message"
-                            id="message-input"
-                            rows="1"
-                            maxlength="1000"
+                    <div class="flex-1 relative">
+                        <textarea name="message" id="message-input" rows="1" maxlength="1000"
                             placeholder="Tulis pesan..."
-                            class="max-h-[120px] w-full resize-none rounded-full border border-gray-200 bg-gray-50 px-4 py-3 pr-12 text-sm text-gray-800 placeholder:text-gray-400 outline-none transition focus:border-transparent focus:ring-2 focus:ring-emerald-300"
+                            class="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 pr-12 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nusa/30 focus:border-nusa transition-all overflow-hidden"
+                            style="max-height: 120px;"
                             onkeydown="handleEnterKey(event)"></textarea>
-
-                        <span class="absolute bottom-2.5 right-4 text-[10px] text-gray-300" id="char-count">0/1000</span>
+                        <span class="absolute bottom-2.5 right-3 text-[10px] text-gray-300" id="char-count">0/1000</span>
                     </div>
 
-                    <button
-                        type="submit"
-                        class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition hover:bg-emerald-600 active:bg-emerald-700 disabled:opacity-50"
+                    <button type="submit"
+                        class="flex-shrink-0 w-10 h-10 rounded-full bg-nusa hover:bg-nusa-dark active:bg-nusa-dark text-white flex items-center justify-center transition-colors shadow-sm disabled:opacity-50"
                         id="send-btn">
-                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                         </svg>
                     </button>
                 </form>
 
                 @error('message')
-                    <p class="mt-1 ml-1 text-xs text-red-500">{{ $message }}</p>
+                    <p class="text-xs text-red-500 mt-1 ml-1">{{ $message }}</p>
                 @enderror
             </div>
         </div>
+
     </div>
 
     <script>
+        // ── Auto-scroll ke bawah saat halaman load ──
         document.getElementById('chat-bottom')?.scrollIntoView({ behavior: 'instant' });
 
+        // ── Auto-resize textarea ──
         const textarea = document.getElementById('message-input');
         const charCount = document.getElementById('char-count');
 
@@ -169,6 +153,7 @@
             charCount.textContent = textarea.value.length + '/1000';
         });
 
+        // ── Kirim dengan Enter (Shift+Enter = newline) ──
         function handleEnterKey(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

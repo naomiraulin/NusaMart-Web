@@ -5,8 +5,10 @@
 
 <x-dynamic-component :component="$layout">
 
-    {{-- HEADER HASIL PENCARIAN --}}
-    <div class="mb-6 flex items-center justify-between">
+    {{-- HEADER HASIL PENCARIAN & FILTER --}}
+    <div class="mb-6 flex flex-col gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+        
+        {{-- Info Hasil Pencarian --}}
         <div>
             <h1 class="text-xl font-semibold text-gray-900">
                 Hasil Pencarian: <span class="text-nusa font-bold">"{{ $search }}"</span>
@@ -15,9 +17,82 @@
                 Menemukan {{ $products->total() ?? $products->count() }} produk yang sesuai.
             </p>
         </div>
-        <a href="{{ route('home') }}" class="text-sm text-nusa hover:text-nusa-dark font-medium transition">
-            &larr; Kembali
-        </a>
+
+        {{-- Form Filter --}}
+        <form action="{{ route('products.search') }}" method="GET" class="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-4">
+            {{-- Menyimpan kata kunci pencarian --}}
+            <input type="hidden" name="search" value="{{ $search }}">
+
+            {{-- Filter Urutkan (Style Chips) --}}
+            <div class="flex flex-wrap items-center gap-2">
+                @php $currentSort = request('sort', 'semua'); @endphp
+
+                {{-- Chip: Semua --}}
+                <label class="cursor-pointer m-0">
+                    <input type="radio" name="sort" value="semua" class="sr-only" 
+                           {{ $currentSort === 'semua' ? 'checked' : '' }} 
+                           onchange="this.form.submit()">
+                    <div class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-full border transition-all duration-200
+                                {{ $currentSort === 'semua' ? 'bg-nusa-light border-nusa text-nusa' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50' }}">
+                        @if($currentSort === 'semua')
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        @endif
+                        Semua
+                    </div>
+                </label>
+
+                {{-- Chip: Harga Termurah --}}
+                <label class="cursor-pointer m-0">
+                    <input type="radio" name="sort" value="termurah" class="sr-only" 
+                           {{ $currentSort === 'termurah' ? 'checked' : '' }} 
+                           onchange="this.form.submit()">
+                    <div class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-full border transition-all duration-200
+                                {{ $currentSort === 'termurah' ? 'bg-nusa-light border-nusa text-nusa' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50' }}">
+                        @if($currentSort === 'termurah')
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        @endif
+                        Harga Termurah
+                    </div>
+                </label>
+
+                {{-- Chip: Harga Termahal --}}
+                <label class="cursor-pointer m-0">
+                    <input type="radio" name="sort" value="termahal" class="sr-only" 
+                           {{ $currentSort === 'termahal' ? 'checked' : '' }} 
+                           onchange="this.form.submit()">
+                    <div class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-full border transition-all duration-200
+                                {{ $currentSort === 'termahal' ? 'bg-nusa-light border-nusa text-nusa' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50' }}">
+                        @if($currentSort === 'termahal')
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        @endif
+                        Harga Termahal
+                    </div>
+                </label>
+            </div>
+
+            {{-- Filter Rentang Harga --}}
+            <div class="flex items-center gap-2">
+                <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Harga Min" min="0"
+                    class="w-28 px-3 py-1.5 text-sm border border-gray-300 rounded-full outline-none focus:border-nusa focus:ring-1 focus:ring-nusa transition placeholder-gray-400">
+
+                <span class="text-gray-400 font-medium">-</span>
+
+                <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Harga Max" min="0"
+                    class="w-28 px-3 py-1.5 text-sm border border-gray-300 rounded-full outline-none focus:border-nusa focus:ring-1 focus:ring-nusa transition placeholder-gray-400">
+                
+                {{-- Tombol Terapkan khusus untuk harga --}}
+                <button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-nusa hover:bg-nusa-dark rounded-full transition">
+                    Terapkan
+                </button>
+            </div>
+        </form>
+        
     </div>
 
     {{-- GRID PRODUK --}}

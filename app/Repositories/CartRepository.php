@@ -4,17 +4,25 @@ namespace App\Repositories;
 
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Services\IdGeneratorService;
 use Illuminate\Database\Eloquent\Collection;
 
 class CartRepository
 {
+    public function __construct(
+        private IdGeneratorService $idGenerator
+    ) {}
+
     /**
      * Ambil cart milik user beserta item-itemnya.
      */
     public function findByUser(string $userId): ?Cart
     {
         return Cart::with([
+            // Ditambahkan 'product.store' supaya $item->productItem->product->store
+            // tidak memicu N+1 query saat dipakai untuk grouping per toko di view cart.
             'cartItems.productItem.product.productImages',
+            'cartItems.productItem.product.store',
             'cartItems.productItem.productVariations',
         ])->where('idUser', $userId)->first();
     }
@@ -34,7 +42,12 @@ class CartRepository
      */
     public function createCart(string $userId): Cart
     {
-        return Cart::create(['idUser' => $userId]);
+        return Cart::create([
+            // TODO: ganti prefix 'CRT' kalau project kamu sudah punya konvensi
+            // prefix tersendiri untuk cart.
+            'idCart' => $this->idGenerator->generate('CRT', Cart::class, 'idCart'),
+            'idUser' => $userId,
+        ]);
     }
 
     /**
@@ -43,9 +56,16 @@ class CartRepository
     public function addItem(string $cartId, string $itemId, int $quantity): CartItem
     {
         return CartItem::create([
-            'idCart'    => $cartId,
-            'idItem'    => $itemId,
-            'quantity'  => $quantity,
+            // Tanpa ini, insert akan gagal dengan error
+            // "Field 'idCartItem' doesn't have a default value" -
+            // sama seperti kasus 'idChat' sebelumnya, karena kolom
+            // ini primary key string custom, bukan auto-increment.
+            // TODO: ganti prefix 'CTI' kalau project kamu sudah punya
+            // konvensi prefix tersendiri.
+            'idCartItem' => $this->idGenerator->generate('CTI', CartItem::class, 'idCartItem'),
+            'idCart'     => $cartId,
+            'idItem'     => $itemId,
+            'quantity'   => $quantity,
         ]);
     }
 

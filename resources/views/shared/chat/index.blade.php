@@ -1,97 +1,90 @@
 @php $layout = auth()->user()->role === 'SELLER' ? 'seller-layout' : 'buyer-layout'; @endphp
 
 <x-dynamic-component :component="$layout">
-    <x-slot name="pageTitle">Pesan</x-slot>
+    <x-slot name="pageTitle">Chat</x-slot>
 
-    <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-4xl">
+    <div class="max-w-3xl mx-auto">
 
-            {{-- Header --}}
-            <div class="mb-6">
-                <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700">
-                    <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
-                    Chat
+        {{-- Card daftar percakapan --}}
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+
+            @if ($rooms->isEmpty())
+                {{-- Empty State --}}
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+                    <div class="w-14 h-14 rounded-full bg-nusa-light flex items-center justify-center mb-3">
+                        <svg class="w-7 h-7 text-nusa" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-700 font-medium">Belum ada percakapan</p>
+                    <p class="text-sm text-gray-400 mt-1">Pesan dari pembeli akan muncul di sini.</p>
                 </div>
-                <h1 class="mt-3 text-2xl font-bold tracking-tight text-gray-900">Pesan</h1>
-                <p class="mt-1 text-sm text-gray-500">{{ $rooms->count() }} percakapan aktif</p>
-            </div>
+            @else
+                <div class="divide-y divide-gray-100">
+                    @foreach ($rooms as $room)
+                        @php
+                            $authId = auth()->id();
+                            // Tentukan lawan bicara
+                            $other = $room->idUser1 === $authId ? $room->user2 : $room->user1;
+                            // Hitung pesan belum dibaca dari lawan bicara
+                            $unreadCount = $room->chats
+                                ->where('senderId', '!=', $authId)
+                                ->where('isRead', false)
+                                ->count();
+                        @endphp
 
-            {{-- Container --}}
-            <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-                @if ($rooms->isEmpty())
-                    <div class="flex min-h-[520px] flex-col items-center justify-center px-6 py-20 text-center">
-                        <div class="mb-5 flex h-18 w-18 items-center justify-center rounded-full bg-indigo-50">
-                            <svg class="h-9 w-9 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"
-                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                            </svg>
-                        </div>
-                        <h2 class="text-base font-semibold text-gray-800">Belum ada percakapan</h2>
-                        <p class="mt-1 text-sm text-gray-500">Pesan dari pembeli akan muncul di sini.</p>
-                    </div>
-                @else
-                    <div class="divide-y divide-gray-100">
-                        @foreach ($rooms as $room)
-                            @php
-                                $authId = auth()->id();
-                                $other = $room->idUser1 === $authId ? $room->user2 : $room->user1;
-                                $unreadCount = $room->chats
-                                    ->where('senderId', '!=', $authId)
-                                    ->where('isRead', false)
-                                    ->count();
-                            @endphp
+                        <a href="{{ route('chat.show', $room->idRoom) }}"
+                            class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group">
 
-                            <a href="{{ route('chat.show', $room->idRoom) }}"
-                               class="group flex items-center gap-4 px-5 py-4 transition-all hover:bg-gray-50 sm:px-6">
-
-                                {{-- Avatar --}}
-                                <div class="relative flex-shrink-0">
-                                    @if ($other?->imageURL)
-                                        <img src="{{ $other->imageURL }}" alt="{{ $other->username }}"
-                                             class="h-13 w-13 rounded-full object-cover ring-2 ring-white shadow-sm">
-                                    @else
-                                        <div class="flex h-13 w-13 items-center justify-center rounded-full bg-indigo-100 text-base font-semibold uppercase text-indigo-600 ring-2 ring-white shadow-sm">
-                                            {{ mb_substr($other?->username ?? '?', 0, 1) }}
-                                        </div>
-                                    @endif
-
-                                    @if ($unreadCount > 0)
-                                        <span class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
-                                            {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                                        </span>
-                                    @endif
-                                </div>
-
-                                {{-- Info --}}
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="min-w-0">
-                                            <p class="truncate text-sm font-semibold text-gray-900 group-hover:text-indigo-600">
-                                                {{ $other?->username ?? 'Pengguna Dihapus' }}
-                                            </p>
-                                            <p class="mt-1 truncate text-sm {{ $unreadCount > 0 ? 'font-medium text-gray-800' : 'text-gray-500' }}">
-                                                {{ $room->lastMessage ?? 'Belum ada pesan' }}
-                                            </p>
-                                        </div>
-
-                                        <div class="flex flex-shrink-0 flex-col items-end gap-1">
-                                            <span class="text-xs text-gray-400">
-                                                {{ $room->updateAt ? \Carbon\Carbon::parse($room->updateAt)->diffForHumans(null, true) : '' }}
-                                            </span>
-
-                                            @if ($unreadCount > 0)
-                                                <span class="rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-semibold text-indigo-600">
-                                                    Baru
-                                                </span>
-                                            @endif
-                                        </div>
+                            {{-- Avatar --}}
+                            <div class="relative flex-shrink-0">
+                                @if ($other?->imageURL)
+                                    <img src="{{ $other->imageURL }}" alt="{{ $other->username }}"
+                                        class="w-11 h-11 rounded-full object-cover">
+                                @else
+                                    <div
+                                        class="w-11 h-11 rounded-full bg-nusa-light flex items-center justify-center text-nusa font-semibold text-base uppercase">
+                                        {{ mb_substr($other?->username ?? '?', 0, 1) }}
                                     </div>
+                                @endif
+
+                                {{-- Unread badge --}}
+                                @if ($unreadCount > 0)
+                                    <span
+                                        class="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                        {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            {{-- Info --}}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span
+                                        class="text-sm font-semibold text-gray-800 truncate group-hover:text-nusa transition-colors">
+                                        {{ $other?->username ?? 'Pengguna Dihapus' }}
+                                    </span>
+                                    <span class="text-xs text-gray-400 flex-shrink-0">
+                                        {{ $room->updateAt ? \Carbon\Carbon::parse($room->updateAt)->diffForHumans(null, true) : '' }}
+                                    </span>
                                 </div>
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
+                                <p
+                                    class="text-sm mt-0.5 truncate {{ $unreadCount > 0 ? 'text-gray-800 font-medium' : 'text-gray-400' }}">
+                                    {{ $room->lastMessage ?? 'Belum ada pesan' }}
+                                </p>
+                            </div>
+
+                            {{-- Arrow --}}
+                            <svg class="w-4 h-4 text-gray-300 flex-shrink-0 group-hover:text-nusa transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </div>
+
     </div>
 </x-dynamic-component>
