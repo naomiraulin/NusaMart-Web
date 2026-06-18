@@ -18,7 +18,7 @@ class UpdateStoreRequest extends FormRequest
             'description'  => ['sometimes', 'nullable', 'string'],
             'location'     => ['sometimes', 'string', 'max:255'],
             'url_location' => ['sometimes', 'nullable', 'url'],
-            'logo'         => ['sometimes', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'logo'         => ['sometimes', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
         ];
     }
 
@@ -28,7 +28,7 @@ class UpdateStoreRequest extends FormRequest
             'name.max'        => 'Nama toko maksimal 150 karakter.',
             'url_location.url'=> 'Format URL lokasi tidak valid.',
             'logo.image'      => 'Logo harus berupa gambar.',
-            'logo.max'        => 'Ukuran logo maksimal 2MB.',
+            'logo.max'        => 'Ukuran logo maksimal 8MB.',
         ];
     }
 }

@@ -6,9 +6,16 @@ use App\Models\Chat;
 use App\Models\RoomChat;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Services\IdGeneratorService;
+
 
 class ChatRepository
 {
+    
+    public function __construct(
+        private IdGeneratorService $idGenerator
+    ) {}
+    
     /**
      * Ambil semua room chat milik user.
      */
@@ -60,6 +67,7 @@ class ChatRepository
     public function sendMessage(string $roomId, string $senderId, string $message): Chat
     {
         $chat = Chat::create([
+            'idChat'      => $this->idGenerator->generate('CHT', Chat::class, 'idChat'),
             'idRoom'      => $roomId,
             'senderId'    => $senderId,
             'messageText' => $message,

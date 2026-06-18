@@ -34,15 +34,18 @@
 
             {{-- Search bar --}}
             <form action="{{ route('home') }}" method="GET" class="flex-1 max-w-xl">
-                <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:border-nusa transition">
+                <div class="flex items-center gap-x-2 w-full">
+                    
                     <input type="text" name="search" value="{{ request('search') }}"
                         placeholder="Cari produk..."
-                        class="flex-1 px-4 py-2 text-sm outline-none bg-white">
-                    <button type="submit" class="bg-nusa hover:bg-nusa-dark px-4 py-2 text-white transition">
+                        class="flex-1 px-4 py-2.5 text-sm border border-gray-300 rounded-full outline-none bg-white focus:border-nusa focus:ring-1 focus:ring-nusa transition">
+                    
+                    <button type="submit" class="bg-[#008080] hover:bg-nusa-dark px-5 py-2.5 rounded-full text-white transition flex items-center justify-center shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </button>
+                    
                 </div>
             </form>
 

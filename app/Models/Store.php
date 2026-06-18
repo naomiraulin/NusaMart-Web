@@ -6,6 +6,7 @@ use Database\Factories\StoreFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BadgeVerification;
 
 #[Fillable(['idStore', 'idSeller', 'name', 'description', 'logoURL', 'location', 'urlLocation', 'storeRating', 'isActive'])]
 class Store extends Model
@@ -33,5 +34,10 @@ class Store extends Model
     public function products()
     {
         return $this->hasMany(Product::class, 'idStore', 'idStore');
+    }
+
+    public function badgeVerifications()
+    {
+        return $this->hasMany(BadgeVerification::class, 'idStore', 'idStore');
     }
 }

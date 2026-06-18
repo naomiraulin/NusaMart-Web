@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
+use App\Models\RoomChat;
 
 class ChatController extends Controller
 {
@@ -37,7 +38,10 @@ class ChatController extends Controller
         $userId = Auth::id();
         $messages = $this->chatService->getMessages($roomId, $userId);
 
-        return view('shared.chat.show', compact('roomId', 'messages'));
+        // ChatController.php - show()
+        $room = RoomChat::find($roomId); // atau lewat service
+        return view('shared.chat.show', compact('roomId', 'messages', 'room'));
+
     }
 
     /**

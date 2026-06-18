@@ -139,4 +139,18 @@ class ProductService
             ]);
         }
     }
+
+    /**
+     * Mencari produk berdasarkan kata kunci (productName).
+     * Diperuntukkan untuk halaman pencarian publik.
+     */
+    public function searchProducts(string $keyword): LengthAwarePaginator
+    {
+        // Gunakan Model Product langsung.
+        // Filter nama produk dengan clause LIKE
+        return Product::where('productName', 'like', '%' . $keyword . '%')
+            ->where('productStatus', 'ACTIVE') // Opsional: Pastikan hanya mencari produk yang statusnya ACTIVE
+            ->with(['productImages', 'productItems', 'store']) // Eager load relasi yang dipanggil di Blade
+            ->paginate(12);
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\BadgeVerification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Store;
 
 class StoreController extends Controller
 {
@@ -71,11 +72,19 @@ class StoreController extends Controller
         \App\Models\BadgeVerification::create([
             'idBadge'     => app(\App\Services\IdGeneratorService::class)->generate('BDG', BadgeVerification::class, column: 'idBadge'),
             'idStore'     => $store->idStore,
-            'badgeType'   => 'VERIFIED',
+            'badgeType'   => 'LOCAL',
             'requestDate' => now(),
             'status'      => 'PENDING',
         ]);
 
         return back()->with('success', 'Permohonan verifikasi berhasil dikirim.');
+    }
+
+    public function findBySeller(string $sellerId): ?Store
+    {
+        // Tambahkan with(['badgeVerifications']) di sini
+        return Store::with(['badgeVerifications'])
+            ->where('idSeller', $sellerId)
+            ->first();
     }
 }
