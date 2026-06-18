@@ -32,7 +32,7 @@
                 <a href="{{ route('product.detail', $product->idProduct) }}" class="group">
                     <div class="aspect-square w-full rounded-lg overflow-hidden bg-gray-100 mb-2">
                         @if($primaryImage)
-                            <img src="{{ $primaryImage->imageURL }}" alt="{{ $product->productName }}"
+                            <img src="{{ asset($primaryImage->imageURL) }}" alt="{{ $product->productName }}"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
                         @else
                             <div class="w-full h-full flex items-center justify-center text-gray-300 text-xs">
