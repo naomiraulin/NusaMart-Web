@@ -14,7 +14,10 @@ class UpdateShippingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status'      => ['required', 'in:WAITING,PICKED_UP,IN_TRANSIT,DELIVERED,FAILED'],
+            // DELIVERED tidak diizinkan di sini — status "selesai" hanya boleh
+            // dikonfirmasi oleh buyer lewat OrderController@complete (completeOrder()),
+            // karena sekaligus mencairkan dana ke wallet seller.
+            'status'      => ['required', 'in:WAITING,PICKED_UP,IN_TRANSIT,FAILED'],
             'location'    => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:500'],
         ];
@@ -24,7 +27,7 @@ class UpdateShippingRequest extends FormRequest
     {
         return [
             'status.required' => 'Status pengiriman wajib diisi.',
-            'status.in'       => 'Status pengiriman tidak valid. Pilihan: WAITING, PICKED_UP, IN_TRANSIT, DELIVERED, FAILED.',
+            'status.in'       => 'Status pengiriman tidak valid. Pilihan: WAITING, PICKED_UP, IN_TRANSIT, FAILED.',
             'location.max'    => 'Lokasi maksimal 255 karakter.',
             'description.max' => 'Deskripsi maksimal 500 karakter.',
         ];

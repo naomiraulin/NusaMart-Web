@@ -24,7 +24,7 @@
 {{-- Greeting --}}
 <div class="mb-6">
     <h1 class="text-xl font-semibold text-gray-800">
-        Selamat datang, {{ auth()->user()->username }}! 👋
+        Selamat datang, {{ auth()->user()->username }}! 
     </h1>
     <p class="text-sm text-gray-500 mt-0.5">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
 </div>

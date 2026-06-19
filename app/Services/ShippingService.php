@@ -85,6 +85,9 @@ class ShippingService
 
     /**
      * Update status pengiriman & tambah tracking point.
+     * Hanya untuk status proses pengiriman (WAITING/PICKED_UP/IN_TRANSIT/FAILED).
+     * Status DELIVERED tidak ditangani di sini — itu murni aksi buyer lewat
+     * OrderService::completeOrder(), karena sekaligus mencairkan dana ke wallet seller.
      */
     public function updateStatus(string $shippingId, string $status, array $trackingData = []): Shipping
     {
@@ -95,15 +98,6 @@ class ShippingService
                 'packetLocation' => $trackingData['location'] ?? null,
                 'description'    => $trackingData['description'] ?? "Status diperbarui: {$status}",
             ]);
-
-            // Kalau sudah delivered, update order juga
-            if ($status === 'DELIVERED') {
-                $this->orderRepository->updateStatus($shipping->idOrder, 'DELIVERED');
-
-                // Update tanggal tiba
-                \App\Models\Order::where('idOrder', $shipping->idOrder)
-                    ->update(['arrivedDate' => now()]);
-            }
 
             return $shipping->fresh();
         });

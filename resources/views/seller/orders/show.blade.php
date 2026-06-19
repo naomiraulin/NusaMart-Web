@@ -432,9 +432,11 @@
                                     <option value="WAITING" {{ $order->shipping?->shippingStatus === 'WAITING' ? 'selected' : '' }}>Menunggu Pickup</option>
                                     <option value="PICKED_UP" {{ $order->shipping?->shippingStatus === 'PICKED_UP' ? 'selected' : '' }}>Sudah Diambil Kurir</option>
                                     <option value="IN_TRANSIT" {{ $order->shipping?->shippingStatus === 'IN_TRANSIT' ? 'selected' : '' }}>Dalam Pengiriman</option>
-                                    <option value="DELIVERED">Sudah Diterima</option>
                                     <option value="FAILED">Gagal Kirim</option>
                                 </select>
+                                <p class="help-text" style="font-size:0.74rem; color:#9ca3af; margin-top:0.3rem;">
+                                    Status "Sudah Diterima" hanya bisa dikonfirmasi oleh pembeli.
+                                </p>
                             </div>
                             <div style="flex:1; min-width:160px;">
                                 <label class="form-label">Lokasi (opsional)</label>

@@ -47,17 +47,9 @@
                 <h2 class="text-4xl font-bold text-gray-900 mt-3 leading-snug">
                     Dukung Produk<br>Lokal Kebanggaanmu!
                 </h2>
-                <p class="text-gray-500 mt-4 text-base leading-relaxed max-w-xs">
-                    Bergabung dengan ribuan pembeli dan penjual yang memperkuat ekonomi lokal Indonesia.
-                </p>
             </div>
 
-            {{-- Ganti dengan: <img src="{{ asset('images/ilustrasi-register.svg') }}" ...> --}}
-            <img
-                src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6d2.svg"
-                alt="Ilustrasi Belanja"
-                class="w-64 h-64 object-contain opacity-80"
-            >
+            <img src="{{ asset('image/auth_illustration.png') }}" alt="Ilustrasi NusaMart" class="w-72 h-72 object-contain">
 
             <div class="mt-8 flex gap-6 text-sm text-gray-400">
                 <div class="flex items-center gap-1.5">
@@ -162,6 +154,21 @@
                         <p class="error-text hidden text-red-500 text-xs mt-1 font-medium">Password wajib diisi.</p>
                     </div>
 
+                    <div class="input-wrapper">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Konfirmasi Password <span class="text-red-500">*</span></label>
+                        <div class="relative w-full">
+                            <input type="password" id="passwordConfirmInput" name="password_confirmation" placeholder="Konfirmasi password" required
+                                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 pr-12 text-sm focus:ring-2 focus:ring-nusa/30 focus:border-nusa outline-none transition bg-gray-50 focus:bg-white">
+                            <button type="button" onclick="togglePasswordConfirm()" class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-nusa-dark focus:outline-none z-10 cursor-pointer">
+                                <svg id="eyeIconConfirm" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="error-text hidden text-red-500 text-xs mt-1 font-medium" id="confirmPasswordError">Konfirmasi password wajib diisi.</p>
+                    </div>
+
                     {{-- ====== SELLER FIELDS ====== --}}
                     <div id="sellerFields" class="hidden">
                         <div class="border-t border-dashed border-gray-200 my-5"></div>
@@ -222,6 +229,11 @@
             }
         }
 
+        function togglePasswordConfirm() {
+            const input = document.getElementById('passwordConfirmInput');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
         function switchRole(role) {
             const roleInput    = document.getElementById('roleInput');
             const sellerFields = document.getElementById('sellerFields');
@@ -261,7 +273,7 @@
 
             form.addEventListener('submit', function (event) {
                 let isValid = true;
-                
+
                 const requiredInputs = form.querySelectorAll('input[required]');
 
                 form.querySelectorAll('.error-text').forEach(el => el.classList.add('hidden'));
@@ -269,12 +281,11 @@
                     input.classList.remove('border-red-500', 'bg-red-50');
                 });
 
-                // Cek satu per satu input yang wajib diisi
                 requiredInputs.forEach(input => {
                     if (input.value.trim() === '') {
                         isValid = false;
                         input.classList.add('border-red-500', 'bg-red-50');
-                        
+
                         const wrapper = input.closest('.input-wrapper');
                         if (wrapper) {
                             const errorText = wrapper.querySelector('.error-text');
@@ -282,6 +293,19 @@
                         }
                     }
                 });
+
+                // Validasi konfirmasi password
+                const password = document.getElementById('passwordInput').value;
+                const confirm  = document.getElementById('passwordConfirmInput').value;
+
+                if (confirm !== '' && password !== confirm) {
+                    isValid = false;
+                    const confirmInput = document.getElementById('passwordConfirmInput');
+                    confirmInput.classList.add('border-red-500', 'bg-red-50');
+                    const errorEl = document.getElementById('confirmPasswordError');
+                    errorEl.textContent = 'Password tidak cocok.';
+                    errorEl.classList.remove('hidden');
+                }
 
                 if (!isValid) {
                     event.preventDefault();

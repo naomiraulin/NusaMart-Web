@@ -31,12 +31,12 @@ class AuthController extends Controller
             'username'      => 'required|string|unique:users,username',
             'email'         => 'required|email|unique:users,email',
             'phone'         => 'required|string',
-            'password'      => 'required|string|min:8',
+            'password'      => 'required|min:8|confirmed',
             'role'          => 'required|in:BUYER,SELLER',
             // Wajib jika role SELLER
-            'nik'           => 'required_if:role,SELLER|string|size:16',
-            'bankName'      => 'required_if:role,SELLER|string',
-            'accountNumber' => 'required_if:role,SELLER|string',
+            'nik'           => 'required_if:role,SELLER|nullable|string|size:16',
+            'bankName'      => 'required_if:role,SELLER|nullable|string',
+            'accountNumber' => 'required_if:role,SELLER|nullable|string',
         ]);
 
         // Buat user baru

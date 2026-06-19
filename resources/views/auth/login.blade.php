@@ -53,7 +53,7 @@
 
             {{-- ILUSTRASI + TAGLINE --}}
             <div class="flex flex-col items-center text-center md:items-start md:text-left">
-                <img src="{{ asset('images/logo-nusamart.png') }}" alt="Ilustrasi NusaMart" class="w-72 h-72 object-contain">
+                <img src="{{ asset('image/auth_illustration.png') }}" alt="Ilustrasi NusaMart" class="w-72 h-72 object-contain">
                 <p class="mt-2 text-xl font-bold text-nusa">Dukung Produk Lokal Kebanggaanmu!</p>
             </div>
 

@@ -47,7 +47,11 @@ class PaymentService
 
     /**
      * Konfirmasi pembayaran berhasil.
-     * Otomatis update status order & tambah saldo wallet seller.
+     *
+     * Hanya mengubah status PEMBAYARAN jadi APPROVED dan menahan dana ke
+     * outstandingBalance wallet seller. Status ORDER tetap PENDING —
+     * seller yang menentukan kapan order pindah ke PROCESSED lewat
+     * halaman "Pesanan Masuk" (tombol Konfirmasi Pesanan).
      */
     public function confirm(string $paymentId): Payment
     {
@@ -58,10 +62,7 @@ class PaymentService
             $orders = \App\Models\Order::where('idPayment', $paymentId)->get();
 
             foreach ($orders as $order) {
-                // 1. Update status pesanan jadi PROCESSED
-                $this->orderRepository->updateStatus($order->idOrder, 'PROCESSED');
-
-                // 2. Cari dompet toko, kalau belum ada otomatis buatkan (KODE BARU DI SINI)
+                // Cari dompet toko, kalau belum ada otomatis buatkan
                 $wallet = \App\Models\StoreWallet::firstOrCreate(
                     ['idStore' => $order->idStore],
                     [
@@ -71,14 +72,14 @@ class PaymentService
                     ]
                 );
 
-                // 3. Tambahkan saldo ke outstandingBalance (uang tertahan)
+                // Tahan dana ke outstandingBalance (belum bisa ditarik sampai order selesai)
                 $this->walletRepository->updateBalance(
                     $wallet->idWallet,
                     $wallet->activeBalance,
                     $wallet->outstandingBalance + $order->grandTotal,
                 );
 
-                // 4. Catat riwayat transaksinya
+                // Catat riwayat transaksinya
                 $this->walletRepository->addTransaction([
                     'idWallet'     => $wallet->idWallet,
                     'mutationType' => 'IN',
