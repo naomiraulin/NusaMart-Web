@@ -48,6 +48,12 @@ class WalletRepository
      */
     public function addTransaction(array $data): WalletTransaction
     {
+        // Generate idTransaction kalau belum ada di data
+        if (!isset($data['idTransaction'])) {
+            $data['idTransaction'] = app(\App\Services\IdGeneratorService::class)
+                ->generate('WTR', WalletTransaction::class, 'idTransaction');
+        }
+
         return WalletTransaction::create($data);
     }
 
@@ -57,7 +63,7 @@ class WalletRepository
     public function getTransactions(string $walletId): LengthAwarePaginator
     {
         return WalletTransaction::where('idWallet', $walletId)
-            ->orderBy('created_at', 'desc')
+            ->orderBy('createAt', 'desc')
             ->paginate(15);
     }
 

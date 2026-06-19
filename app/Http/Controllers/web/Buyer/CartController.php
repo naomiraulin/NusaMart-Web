@@ -43,7 +43,7 @@ class CartController extends Controller
             $request->input('quantity'),
         );
 
-        return back()->with('success', 'Produk berhasil ditambahkan ke keranjang.');
+        return redirect()->route('buyer.cart.index')->with('success', 'Produk berhasil ditambahkan ke keranjang.');
     }
 
     /**

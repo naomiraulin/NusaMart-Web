@@ -42,6 +42,20 @@ class WalletService
     }
 
     /**
+     * Ambil detail withdrawal berdasarkan ID.
+     */
+    public function getWithdrawalById(string $withdrawalId): Withdrawal
+    {
+        $withdrawal = Withdrawal::where('idWithdrawal', $withdrawalId)->first();
+
+        if (!$withdrawal) {
+            abort(404, 'Data penarikan tidak ditemukan.');
+        }
+
+        return $withdrawal;
+    }
+
+    /**
      * Pindahkan saldo dari outstanding ke active
      * setelah order berstatus DELIVERED.
      */
@@ -68,6 +82,7 @@ class WalletService
 
     /**
      * Request penarikan saldo oleh seller.
+     * activeBalance hanya berisi dana dari pesanan yang sudah DELIVERED.
      */
     public function requestWithdrawal(string $storeId, float $amount): Withdrawal
     {
@@ -80,29 +95,32 @@ class WalletService
                 ]);
             }
 
-            // Kurangi active balance
+            // 1. Kurangi active balance
             $this->walletRepository->updateBalance(
                 $wallet->idWallet,
                 $wallet->activeBalance - $amount,
                 $wallet->outstandingBalance,
             );
 
-            // Catat transaksi keluar
-            $this->walletRepository->addTransaction([
-                'idWallet'     => $wallet->idWallet,
-                'mutationType' => 'OUT',
-                'nominal'      => $amount,
-                'description'  => 'Permintaan penarikan saldo.',
-            ]);
-
-            // Buat withdrawal request
-            return $this->walletRepository->createWithdrawal([
+            // 2. Buat withdrawal dulu — supaya ada idWithdrawal
+            $withdrawal = $this->walletRepository->createWithdrawal([
                 'idWithdrawal' => $this->idGenerator->generate('WDR', Withdrawal::class, 'idWithdrawal'),
                 'idWallet'     => $wallet->idWallet,
                 'nominal'      => $amount,
                 'serviceCost'  => 0,
                 'status'       => 'PENDING',
             ]);
+
+            // 3. Catat transaksi dengan referenceId dari withdrawal
+            $this->walletRepository->addTransaction([
+                'idWallet'     => $wallet->idWallet,
+                'mutationType' => 'OUT',
+                'nominal'      => $amount,
+                'description'  => 'Permintaan penarikan saldo.',
+                'referenceId'  => $withdrawal->idWithdrawal,
+            ]);
+
+            return $withdrawal;
         });
     }
 

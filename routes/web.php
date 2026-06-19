@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\Shared\ProfileController;
 use App\Http\Controllers\Web\Shared\ChatController;
 use App\Http\Controllers\Web\Shared\StoreDetailController;
 use App\Http\Controllers\Web\Buyer\OrderController as BuyerOrderController;
+use App\Http\Controllers\Web\Seller\WalletController;
 
 // Homepage - Langsung menampilkan produk
 Route::get('/', [ProductController::class, 'index'])->name('home');
@@ -58,7 +59,7 @@ Route::middleware('auth')->group(function () {
 
     // --- Cart (PLACEHOLDER) ---
     // TODO: ganti closure ini dengan CartController@index begitu sudah dibuat.
-    Route::post('/cart/add', [App\Http\Controllers\Web\Buyer\CartController::class, 'store'])->name('buyer.cart.add');
+    Route::post('/cart/add', [App\Http\Controllers\Web\Buyer\CartController::class, 'add'])->name('buyer.cart.add');
     Route::get('/cart', [\App\Http\Controllers\Web\Buyer\CartController::class, 'index'])->name('buyer.cart.index');
     Route::put('/cart/{cartItemId}', [\App\Http\Controllers\Web\Buyer\CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cartItemId}', [\App\Http\Controllers\Web\Buyer\CartController::class, 'remove'])->name('cart.remove');
@@ -92,6 +93,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [\App\Http\Controllers\Web\Seller\OrderController::class, 'index'])->name('seller.orders.index');
 
         // Wallet
-        Route::get('/wallet', [\App\Http\Controllers\Web\Seller\WalletController::class, 'index'])->name('seller.wallet.index');
+        Route::prefix('wallet')->name('seller.wallet.')->controller(\App\Http\Controllers\Web\Seller\WalletController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/withdraw', 'withdrawForm')->name('withdraw');
+            Route::post('/withdraw', 'withdraw')->name('withdraw.store');
+            Route::get('/receipt/{withdrawalId}', 'receipt')->name('receipt');
+        });
     });
 });

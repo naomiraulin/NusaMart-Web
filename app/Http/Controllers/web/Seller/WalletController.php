@@ -28,7 +28,7 @@ class WalletController extends Controller
         $wallet       = $this->walletService->getByStore($store->idStore);
         $transactions = $this->walletService->getTransactions($store->idStore);
 
-        return view('seller.wallet.index', compact('wallet', 'transactions'));
+        return view('seller.wallet.index', compact('wallet', 'transactions', 'store'));
     }
 
     /**
@@ -41,11 +41,12 @@ class WalletController extends Controller
         $store  = $this->storeService->getBySeller($user->idUser);
         $wallet = $this->walletService->getByStore($store->idStore);
 
-        return view('seller.wallet.withdraw', compact('wallet'));
+        return view('seller.wallet.withdraw', compact('wallet', 'store'));
     }
 
     /**
      * Proses request penarikan saldo.
+     * Setelah berhasil, simpan URL receipt ke transferPic lalu redirect ke receipt.
      */
     public function withdraw(Request $request): RedirectResponse
     {
@@ -57,9 +58,30 @@ class WalletController extends Controller
         $user  = Auth::user();
         $store = $this->storeService->getBySeller($user->idUser);
 
-        $this->walletService->requestWithdrawal($store->idStore, $request->input('amount'));
+        $withdrawal = $this->walletService->requestWithdrawal(
+            $store->idStore,
+            $request->input('amount'),
+        );
 
-        return redirect()->route('seller.wallet.index')
+        // Simpan URL receipt ke transferPic
+        $receiptUrl = route('seller.wallet.receipt', $withdrawal->idWithdrawal);
+        $withdrawal->update(['transferPic' => $receiptUrl]);
+
+        return redirect()->route('seller.wallet.receipt', $withdrawal->idWithdrawal)
             ->with('success', 'Permintaan penarikan berhasil dikirim.');
+    }
+
+    /**
+     * Halaman bukti penarikan — bisa diprint.
+     */
+    public function receipt(string $withdrawalId): View
+    {
+        /** @var \App\Models\User $user */
+        $user       = Auth::user();
+        $store      = $this->storeService->getBySeller($user->idUser);
+        $withdrawal = $this->walletService->getWithdrawalById($withdrawalId);
+        $wallet     = $this->walletService->getByStore($store->idStore);
+
+        return view('seller.wallet.receipt', compact('withdrawal', 'store', 'wallet'));
     }
 }

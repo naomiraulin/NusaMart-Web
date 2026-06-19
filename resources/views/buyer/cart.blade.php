@@ -3,10 +3,24 @@
 <x-dynamic-component :component="$layout">
     <x-slot name="pageTitle">Keranjang Saya</x-slot>
 
+    @php
+        // Map idCartItem => subtotal (price * quantity), dikirim ke Alpine
+        // supaya total di "Ringkasan Belanja" bisa dihitung ulang secara
+        // reaktif berdasarkan item yang sedang dicentang, bukan total
+        // statis dari seluruh isi cart.
+        $itemPriceMap = $cart->cartItems->mapWithKeys(function ($item) {
+            $subtotal = ($item->productItem?->price ?? 0) * $item->quantity;
+            return [$item->idCartItem => $subtotal];
+        });
+    @endphp
+
     <div
         x-data="{
             // Berisi idCartItem yang sedang dicentang
             checked: [],
+
+            // Map idCartItem => subtotal, dipakai untuk hitung total terpilih
+            priceMap: {{ $itemPriceMap->toJson() }},
 
             toggleItem(id) {
                 if (this.checked.includes(id)) {
@@ -38,6 +52,12 @@
 
             isAllChecked(allItemIds) {
                 return allItemIds.length > 0 && allItemIds.every(id => this.checked.includes(id));
+            },
+
+            // Total dihitung ulang otomatis setiap kali `checked` berubah,
+            // hanya menjumlahkan subtotal item yang dicentang.
+            get selectedTotal() {
+                return this.checked.reduce((sum, id) => sum + (this.priceMap[id] || 0), 0);
             },
         }"
     >
@@ -184,17 +204,20 @@
 
                     <div class="flex items-center justify-between text-sm mb-1">
                         <span class="text-gray-500">Total</span>
-                        <span class="font-bold text-nusa">Rp{{ number_format($total, 0, ',', '.') }}</span>
+                        <span class="font-bold text-nusa" x-text="'Rp' + selectedTotal.toLocaleString('id-ID')"></span>
                     </div>
-                    <p class="text-xs text-gray-400 mb-4">{{ $cart->cartItems->count() }} Produk</p>
+                    <p class="text-xs text-gray-400 mb-4">
+                        <span x-text="checked.length"></span> Produk dipilih
+                    </p>
 
                     {{-- TODO: belum ada route checkout, form diarahkan ke '#' sementara.
                          Idealnya kirim daftar idCartItem yang dicentang (state Alpine `checked`)
                          sebagai input tersembunyi sebelum submit ke route checkout. --}}
-                    <form action="#" method="POST" onsubmit="return checked.length > 0">
+                    <form action="#" method="POST" @submit="if (checked.length === 0) $event.preventDefault()">
                         @csrf
                         <button type="submit"
-                            class="w-full bg-nusa hover:bg-nusa-dark text-white text-sm font-semibold py-2.5 rounded-md transition">
+                            class="w-full bg-nusa hover:bg-nusa-dark text-white text-sm font-semibold py-2.5 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            :disabled="checked.length === 0">
                             Beli
                         </button>
                     </form>

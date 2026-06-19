@@ -121,10 +121,10 @@
             x-show="show"
             x-init="setTimeout(() => show = false, 3000)"
             x-transition.opacity
-            class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white text-sm rounded-lg shadow-lg px-4 py-3 flex items-center gap-4 max-w-md w-[90%]"
+            class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#E0F2F1] text-[#4DB6AC] text-sm rounded-lg shadow-lg px-4 py-3 flex items-center gap-4 max-w-md w-[90%]"
         >
             <span class="flex-1">{{ session('success') }}</span>
-            <button @click="show = false" class="text-green-200 hover:text-white flex-shrink-0">
+            <button @click="show = false" class="text-[#4DB6AC] hover:text-white flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>

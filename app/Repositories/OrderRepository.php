@@ -39,15 +39,14 @@ class OrderRepository
     /**
      * Ambil detail satu order.
      */
-    public function findById(string $id): ?Order
+    public function findById(string $id)
     {
         return Order::with([
-            'orderItems.productItem.product.productImages',
-            'orderItems.productItem.productVariations',
+            'orderItems.productItem.product.productImages', 
             'store',
-            'shipping.courierOption',
+            'shipping.courier',           // <--- INI HARUS BERUBAH JADI courier
             'shipping.shippingTrackings',
-            'userAddress',
+            'address',                    // <--- INI HARUS BERUBAH JADI address
             'payment.paymentMethod',
         ])->where('idOrder', $id)->first();
     }
