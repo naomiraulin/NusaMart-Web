@@ -47,12 +47,29 @@ class ChatController extends Controller
     /**
      * Buyer mulai chat ke seller dari halaman toko/produk.
      */
-    public function openWithSeller(string $sellerId): RedirectResponse
+    public function openWithSeller(Request $request, string $sellerId): RedirectResponse
     {
         /** @var string $userId */
         $userId = Auth::id();
+        
+        // 1. Dapatkan atau buat room baru
         $room = $this->chatService->getOrCreateRoom($userId, $sellerId);
 
+        // 2. Cek apakah chat ini dimulai dari halaman detail produk
+        if ($request->filled('product_id')) {
+            $productId = $request->input('product_id');
+            // Pastikan kamu meng-import use App\Models\Product; di bagian atas controller
+            $product = \App\Models\Product::find($productId);
+            
+            if ($product) {
+                $messageText = "Halo, saya tertarik dengan produk *{$product->productName}*. Apakah masih tersedia?";
+                
+                // Kirim pesan otomatis menggunakan service
+                $this->chatService->sendMessage($room->idRoom, $userId, $messageText);
+            }
+        }
+
+        // 3. Redirect ke halaman room chat
         return redirect()->route('chat.show', $room->idRoom);
     }
 

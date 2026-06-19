@@ -85,7 +85,7 @@
                             <div class="flex items-center gap-3">
                                 @php $primaryImage = $product->productImages->where('isPrimary', true)->first() ?? $product->productImages->first(); @endphp
                                 @if($primaryImage)
-                                    <img src="{{ Storage::url($primaryImage->imageURL) }}"
+                                    <img src="{{ asset ($primaryImage->imageURL) }}" alt="{{ $product->productName }}"
                                         class="w-12 h-12 rounded-lg object-cover border border-gray-100">
                                 @else
                                     <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">

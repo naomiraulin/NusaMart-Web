@@ -21,7 +21,7 @@ class UpdateProductRequest extends FormRequest
             'sub_category_ids'   => ['sometimes', 'array', 'min:1'],
             'sub_category_ids.*' => ['required_with:sub_category_ids', 'string', 'exists:sub_categories,idSubCategory'],
             'images'             => ['sometimes', 'array', 'max:10'],
-            'images.*'           => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'images.*'           => ['sometimes', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 

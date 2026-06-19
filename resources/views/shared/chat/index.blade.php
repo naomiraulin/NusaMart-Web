@@ -27,6 +27,21 @@
                             $authId = auth()->id();
                             // Tentukan lawan bicara
                             $other = $room->idUser1 === $authId ? $room->user2 : $room->user1;
+                            
+                            // LOGIKA PENENTUAN NAMA TANPA MENGUBAH MODEL:
+                            $displayName = 'Pengguna Dihapus';
+                            if ($other) {
+                                if ($other->role === 'SELLER') {
+                                    // Query manual ke tabel Store berdasarkan idUser lawan bicara
+                                    $store = \App\Models\Store::where('idSeller', $other->idUser)->first();
+                                    
+                                    // Jika ketemu tokonya pakai nama toko, kalau tidak kembali ke username
+                                    $displayName = $store ? $store->name : $other->username;
+                                } else {
+                                    $displayName = $other->username;
+                                }
+                            }
+
                             // Hitung pesan belum dibaca dari lawan bicara
                             $unreadCount = $room->chats
                                 ->where('senderId', '!=', $authId)
@@ -40,12 +55,12 @@
                             {{-- Avatar --}}
                             <div class="relative flex-shrink-0">
                                 @if ($other?->imageURL)
-                                    <img src="{{ $other->imageURL }}" alt="{{ $other->username }}"
+                                    <img src="{{ asset('storage/' . $other->imageURL) }}" alt="{{ $displayName }}"
                                         class="w-11 h-11 rounded-full object-cover">
                                 @else
                                     <div
                                         class="w-11 h-11 rounded-full bg-nusa-light flex items-center justify-center text-nusa font-semibold text-base uppercase">
-                                        {{ mb_substr($other?->username ?? '?', 0, 1) }}
+                                        {{ mb_substr($displayName, 0, 1) }}
                                     </div>
                                 @endif
 
@@ -63,7 +78,7 @@
                                 <div class="flex items-center justify-between gap-2">
                                     <span
                                         class="text-sm font-semibold text-gray-800 truncate group-hover:text-nusa transition-colors">
-                                        {{ $other?->username ?? 'Pengguna Dihapus' }}
+                                        {{ $displayName }}
                                     </span>
                                     <span class="text-xs text-gray-400 flex-shrink-0">
                                         {{ $room->updateAt ? \Carbon\Carbon::parse($room->updateAt)->diffForHumans(null, true) : '' }}

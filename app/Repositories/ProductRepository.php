@@ -14,7 +14,8 @@ class ProductRepository
     public function findAll(array $filters = []): LengthAwarePaginator
     {
         $query = Product::with(['store', 'productImages', 'subCategories'])
-            ->whereHas('store', fn($q) => $q->where('isActive', true));
+            ->whereHas('store', fn($q) => $q->where('isActive', true))
+            ->where('productStatus', 'ACTIVE'); // Konsisten: listing publik hanya tampil produk aktif
 
         if (!empty($filters['search'])) {
             $query->where('productName', 'like', '%' . $filters['search'] . '%');
@@ -32,9 +33,8 @@ class ProductRepository
             );
         }
 
-        if (!empty($filters['status'])) {
-            $query->where('productStatus', $filters['status']);
-        }
+        // Filter status hanya berlaku untuk konteks non-publik (misal dashboard admin/seller)
+        // Untuk findAll publik, status sudah dikunci ACTIVE di atas.
 
         $sortBy  = $filters['sort_by']  ?? 'createAt';
         $sortDir = $filters['sort_dir'] ?? 'desc';
@@ -58,13 +58,25 @@ class ProductRepository
 
     /**
      * Ambil semua produk milik satu store (untuk dashboard seller).
+     * Semua status ditampilkan (ACTIVE & INACTIVE) agar seller bisa kelola.
      */
-    public function findByStore(string $storeId): LengthAwarePaginator
+    public function findByStore(string $storeId, array $filters = []): LengthAwarePaginator
     {
-        return Product::with(['productImages', 'productItems'])
-            ->where('idStore', $storeId)
-            ->orderBy('createAt', 'desc')
-            ->paginate(10);
+        $query = Product::with(['productImages', 'productItems'])
+            ->where('idStore', $storeId);
+
+        // Seller bisa filter berdasarkan status di dashboard-nya sendiri
+        if (!empty($filters['status'])) {
+            $query->where('productStatus', $filters['status']);
+        }
+
+        if (!empty($filters['search'])) {
+            $query->where('productName', 'like', '%' . $filters['search'] . '%');
+        }
+
+        $query->orderBy('createAt', 'desc');
+
+        return $query->paginate($filters['per_page'] ?? 10);
     }
 
     /**
@@ -77,6 +89,7 @@ class ProductRepository
 
     /**
      * Update produk berdasarkan ID.
+     * Pastikan produk benar-benar milik store yang diberikan sebelum memanggil ini.
      */
     public function update(string $id, array $data): Product
     {
@@ -91,6 +104,6 @@ class ProductRepository
      */
     public function delete(string $id): bool
     {
-        return Product::where('idProduct', $id)->delete();
+        return (bool) Product::where('idProduct', $id)->delete();
     }
 }

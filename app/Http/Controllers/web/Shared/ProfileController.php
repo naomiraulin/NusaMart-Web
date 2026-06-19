@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web\Shared;
 
 use App\Http\Controllers\Controller;
+use App\Models\UserAddress; // <-- Ini tambahan wajib biar UserAddress terbaca
 use App\Services\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,8 +22,12 @@ class ProfileController extends Controller
     public function show(): View
     {
         $user = Auth::user();
+        
+        // Mengambil daftar alamat milik user ini berdasarkan idUser 
+        $addresses = UserAddress::where('idUser', Auth::id())->get();
 
-        return view('shared.profile', compact('user'));
+        // Lempar data user dan addresses ke view
+        return view('shared.profile', compact('user', 'addresses'));
     }
 
     /**

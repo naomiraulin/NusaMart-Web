@@ -20,7 +20,18 @@ class ReviewController extends Controller
      */
     public function create(string $orderItemId): View
     {
-        return view('buyer.reviews.create', compact('orderItemId'));
+        // Logika dipindah dari View ke Controller
+        $orderItem = \App\Models\OrderItem::with('productItem.product.productImages')->findOrFail($orderItemId);
+        
+        $productName = $orderItem->nameSnapshot ?? 'Produk Tidak Diketahui';
+        $imageURL = null;
+        
+        if ($orderItem && $orderItem->productItem && $orderItem->productItem->product) {
+            $imageURL = $orderItem->productItem->product->productImages->first()->imageURL ?? null;
+        }
+
+        // Passing data ke view
+        return view('buyer.review', compact('orderItemId', 'productName', 'imageURL'));
     }
 
     /**
@@ -31,13 +42,18 @@ class ReviewController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $this->reviewService->create(
+        // Simpan review
+        $review = $this->reviewService->create(
             $user->idUser,
             $request->input('order_item_id'),
             $request->validated(),
             $request->file('images', []),
         );
 
-        return back()->with('success', 'Ulasan berhasil dikirim. Terima kasih!');
+        // Arahkan kembali ke halaman detail pesanan
+        $orderId = $review->orderItem->idOrder;
+        
+        return redirect()->route('buyer.orders.show', $orderId)
+            ->with('success', 'Ulasan berhasil dikirim. Terima kasih!');
     }
 }

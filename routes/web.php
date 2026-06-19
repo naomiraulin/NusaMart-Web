@@ -10,7 +10,9 @@ use App\Http\Controllers\Web\Shared\ProfileController;
 use App\Http\Controllers\Web\Shared\ChatController;
 use App\Http\Controllers\Web\Shared\StoreDetailController;
 use App\Http\Controllers\Web\Buyer\OrderController as BuyerOrderController;
+use App\Http\Controllers\Web\Seller\OrderController as SellerOrderController;
 use App\Http\Controllers\Web\Seller\WalletController;
+use App\Http\Controllers\Web\Buyer\ReviewController;
 
 // Homepage - Langsung menampilkan produk
 Route::get('/', [ProductController::class, 'index'])->name('home');
@@ -70,7 +72,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [BuyerOrderController::class, 'checkout'])->name('buyer.orders.checkout');
     Route::post('/checkout', [BuyerOrderController::class, 'placeOrder'])->name('buyer.orders.placeOrder');
     Route::post('/orders/{id}/cancel', [BuyerOrderController::class, 'cancel'])->name('buyer.orders.cancel');
+    Route::post('/orders/{id}/complete', [BuyerOrderController::class, 'complete'])->name('buyer.orders.complete');
+    // Route untuk Beli Sekarang
+    Route::post('/checkout/direct', [BuyerOrderController::class, 'directCheckout'])->name('buyer.orders.directCheckout');
+    Route::post('/checkout/direct/process', [BuyerOrderController::class, 'placeOrderDirect'])->name('buyer.orders.placeOrderDirect');
 
+    // Pastikan prefix name-nya adalah 'buyer.reviews.' 
+    Route::prefix('reviews')->name('buyer.reviews.')->controller(ReviewController::class)->group(function () {
+        
+        // Dan nama ini adalah 'create'. 
+        // Jika digabung dengan prefix di atas, jadinya persis 'buyer.reviews.create'
+        Route::get('/create/{orderItemId}', 'create')->name('create');
+        
+        Route::post('/store', 'store')->name('store');
+    });
+    
     // Khusus Seller
     Route::prefix('seller')->middleware('role:SELLER')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('seller.dashboard');
@@ -90,10 +106,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('/products/{id}', [\App\Http\Controllers\Web\Seller\ProductController::class, 'destroy'])->name('seller.products.destroy');
 
         // Pesanan
-        Route::get('/orders', [\App\Http\Controllers\Web\Seller\OrderController::class, 'index'])->name('seller.orders.index');
+        Route::prefix('orders')->name('seller.orders.')->controller(SellerOrderController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{id}', 'show')->name('show');
+            Route::put('/{id}/confirm', 'confirm')->name('confirm');
+            Route::put('/{id}/cancel', 'cancel')->name('cancel');
+            // Input data pengiriman (saat status PROCESSED -> SHIPPED)
+            Route::get('/{orderId}/shipping/create', 'createShipping')->name('shipping.create');
+            Route::post('/{orderId}/shipping', 'storeShipping')->name('shipping.store');
+        });
 
         // Wallet
-        Route::prefix('wallet')->name('seller.wallet.')->controller(\App\Http\Controllers\Web\Seller\WalletController::class)->group(function () {
+        Route::prefix('wallet')->name('seller.wallet.')->controller(WalletController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/withdraw', 'withdrawForm')->name('withdraw');
             Route::post('/withdraw', 'withdraw')->name('withdraw.store');

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('idProduct');
             
             // SKU (Stock Keeping Unit) biasanya bersifat unik untuk setiap variasi
-            $table->string('sku')->unique();
+            $table->string('sku')->nullable()->unique();
             $table->integer('stock')->default(0);
             $table->double('price');
             $table->boolean('isActive')->default(true);

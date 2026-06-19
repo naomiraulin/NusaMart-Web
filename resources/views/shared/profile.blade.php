@@ -168,6 +168,129 @@
             color: #9ca3af;
         }
 
+        /* ── Address section ── */
+        .address-header-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .address-header-wrapper .profile-card-title {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .btn-add-address {
+            background: #00736B; /* Warna merah/oranye sesuai referensi gambar pertama */
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.4rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: opacity 0.15s;
+        }
+
+        .btn-add-address:hover { opacity: 0.9; }
+
+        .address-list {
+            max-height: 320px; 
+            overflow-y: auto; 
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-right: 0.5rem;
+        }
+
+        .address-list::-webkit-scrollbar { width: 6px; }
+        .address-list::-webkit-scrollbar-track { background: #f9fafb; border-radius: 4px; }
+        .address-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        .address-list::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        .address-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+
+        .address-item.default {
+            border-color: #008B81;
+            background: #f4fdfc; /* Highlight tipis untuk alamat utama */
+        }
+
+        .address-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .address-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #111827;
+        }
+
+        .badge-default {
+            background: #e0f2f1;
+            color: #008B81;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            border: 1px solid #008B81;
+        }
+
+        .address-details {
+            font-size: 0.8rem;
+            color: #4b5563;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .address-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            font-size: 0.75rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.35rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-outline:hover {
+            border-color: #008B81;
+            color: #008B81;
+        }
+
+        .btn-select {
+            background: #10b981; 
+            color: #fff;
+            border: none;
+            font-size: 0.75rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.35rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-select:hover { background: #059669; }
+
         /* ── Password toggle ── */
         .input-wrapper {
             position: relative;
@@ -345,6 +468,62 @@
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="address-header-wrapper">
+                    <div class="profile-card-title">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Alamat Saya
+                    </div>
+                    <button type="button" class="btn-add-address">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Tambahkan Alamat
+                    </button>
+                </div>
+
+                <div class="address-list">
+                    @forelse($addresses as $address)
+                        <div class="address-item {{ $address->isDefault ? 'default' : '' }}">
+                            <div class="address-item-header">
+                                <span class="address-label">{{ $address->label }}</span>
+                                @if($address->isDefault)
+                                    <span class="badge-default">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 10px; height: 10px; display: inline; margin-bottom: -1px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Utama
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            {{-- Field-field ini merujuk ke tabel User Address  --}}
+                            <div class="address-details">
+                                <strong>{{ $address->receiver }}</strong> | {{ $address->phone }}<br>
+                                {{ $address->completeAddress }}<br>
+                                {{ $address->city }}, {{ $address->province }} {{ $address->postalCode }}
+                            </div>
+                            
+                            <div class="address-actions">
+                                <button type="button" class="btn-outline">Ubah</button>
+                                @if(!$address->isDefault)
+                                    <button type="button" class="btn-select">Pilih</button>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div style="text-align: center; padding: 2rem 0; color: #9ca3af; font-size: 0.85rem;">
+                            Belum ada alamat yang disimpan.
+                        </div>
+                    @endforelse
                 </div>
             </div>
 

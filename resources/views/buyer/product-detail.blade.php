@@ -1,9 +1,12 @@
 @php
     $layout = auth()->check() ? 'buyer-layout' : 'guest-layout';
     
-    // Logika mengecek apakah produk memiliki lebih dari 1 variasi, atau 1 variasi tapi bukan "Default"
+    // PERBAIKAN LOGIKA: Mengecek apakah variasi benar-benar valid (bukan sekadar tulisan "Default" atau kosong)
     $hasVariations = $product->productItems->count() > 1 || 
-                     ($product->productItems->count() == 1 && $product->productItems->first()->productVariations->isNotEmpty());
+                     ($product->productItems->count() == 1 && 
+                      $product->productItems->first()->productVariations
+                          ->filter(fn($v) => !empty(trim($v->value)) && strtolower(trim($v->value)) !== 'default')
+                          ->isNotEmpty());
 
     // Logika mengecek apakah toko penjual sudah memiliki badge VERIFIED yang disetujui
     $isStoreVerified = $product->store && $product->store->badgeVerifications && $product->store->badgeVerifications->where('status', 'APPROVED')->isNotEmpty();
@@ -16,9 +19,12 @@
             
             items: {{ 
             $product->productItems->map(fn($item) => [
-                'id' => $item->idProductItem,
+                'id' => $item->idItem,
                 'price' => (float) $item->price,
-                'stock' => 12, // Sesuaikan dengan field stok jika ada
+                
+                // PERBAIKAN STOK: Sesuaikan '$item->stock' dengan nama kolom stok di database kamu
+                'stock' => $item->stock ?? 12, 
+                
                 'label' => $item->productVariations->map(fn($v) => $v->value)->filter()->implode(' / ') ?: 'Default',
                 'imageURL' => $item->imageURL ?? null
             ])->toJson() 
@@ -28,6 +34,7 @@
             qty: 1,
 
             init() {
+                // Alpine akan otomatis memilih item pertama sebagai default saat halaman dimuat
                 if (this.items.length > 0) {
                     this.selectedItem = this.items[0];
                 }
@@ -69,7 +76,7 @@
                         <button @click="mainImage = '{{ $image->imageURL }}'" 
                                 :class="mainImage === '{{ $image->imageURL }}' ? 'border-nusa ring-2 ring-nusa/20 scale-95' : 'border-gray-200 opacity-70 hover:opacity-100'"
                                 class="w-20 h-20 shrink-0 rounded-xl overflow-hidden border-2 bg-white transition-all duration-300 focus:outline-none transform">
-                            <img src="{{ $image->imageURL }}" alt="Thumbnail" class="w-full h-full object-cover">
+                            <img src="{{ asset($image->imageURL) }}" alt="Thumbnail" class="w-full h-full object-cover">
                         </button>
                     @endforeach
                 </div>
@@ -152,11 +159,15 @@
                         </div>
                     </div>
                     
-                    {{-- TOMBOL CHAT: Cek agar user tidak bisa chat dirinya sendiri --}}
+                    {{-- TOMBOL CHAT --}}
                     @auth
-                        @if(auth()->user()->idUser != ($product->store->idSeller ?? ''))
+                        {{-- Tambahan keamanan: Pastikan store ada dan bukan toko milik sendiri --}}
+                        @if($product->store && auth()->user()->idUser != $product->store->idSeller)
                             <form action="{{ route('chat.openWithSeller', $product->store->idSeller) }}" method="POST">
                                 @csrf
+                                {{-- Kirim ID produk agar chat memiliki konteks --}}
+                                <input type="hidden" name="product_id" value="{{ $product->idProduct }}">
+                                
                                 <button type="submit" class="px-3.5 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:text-nusa hover:border-nusa/30 transition-all duration-200 font-semibold text-xs flex items-center gap-2 shadow-sm">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                                     Chat
@@ -216,10 +227,10 @@
                             </form>
                             
                             {{-- FORM BELI LANGSUNG --}}
-                            <form action="#" method="POST" class="w-full">
+                            <form action="{{ route('buyer.orders.directCheckout') }}" method="POST" class="w-full">
                                 @csrf
-                                <input type="hidden" name="idProductItem" :value="selectedItem ? selectedItem.id : ''">
-                                <input type="hidden" name="qty" :value="qty">
+                                <input type="hidden" name="item_id" :value="selectedItem ? selectedItem.id : ''">
+                                <input type="hidden" name="quantity" :value="qty">
                                 <button type="submit" :disabled="!selectedItem" class="w-full py-3 px-4 bg-gradient-to-r from-nusa to-nusa-dark text-white rounded-xl font-bold hover:shadow-lg hover:shadow-nusa/20 active:scale-[0.98] transition-all duration-200 text-sm shadow-sm disabled:opacity-50">
                                     Beli Langsung
                                 </button>

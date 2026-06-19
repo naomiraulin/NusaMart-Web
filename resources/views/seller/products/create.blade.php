@@ -11,7 +11,7 @@
     .section-title { font-size: 0.9375rem; font-weight: 600; color: #1F2937; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #F3F4F6; }
     .image-preview { position: relative; width: 96px; height: 96px; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB; }
     .image-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .image-preview .remove-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.5); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+    .image-preview .remove-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.5); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; border: none; }
     .upload-area  { border: 2px dashed #D1D5DB; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: border-color .15s; }
     .upload-area:hover { border-color: #008B81; }
     .upload-area.dragover { border-color: #008B81; background: #E0F2F1; }
@@ -20,14 +20,13 @@
     .btn-primary:hover { background: #00736B; }
     .btn-outline  { border: 1px solid #008B81; color: #008B81; }
     .btn-outline:hover { background: #E0F2F1; }
-    .sub-checkbox:checked + label { background: #E0F2F1; border-color: #008B81; color: #008B81; }
 </style>
 
 {{-- ===================== HTML ===================== --}}
 
 {{-- Breadcrumb --}}
 <div class="flex items-center gap-2 text-sm text-gray-500 mb-5">
-    <a href="{{ route('seller.products.index') }}" class="hover:text-nusa transition">Kelola Produk</a>
+    <a href="{{ route('seller.products.index') }}" class="hover:text-[#008B81] transition">Kelola Produk</a>
     <span>/</span>
     <span class="text-gray-800 font-medium">Tambah Produk</span>
 </div>
@@ -72,7 +71,7 @@
                         <div>
                             <label class="form-label">Status Produk</label>
                             <select name="product_status" class="form-input">
-                                <option value="ACTIVE" {{ old('product_status') === 'ACTIVE' ? 'selected' : '' }}>Aktif</option>
+                                <option value="ACTIVE"   {{ old('product_status') === 'ACTIVE'   ? 'selected' : '' }}>Aktif</option>
                                 <option value="INACTIVE" {{ old('product_status') === 'INACTIVE' ? 'selected' : '' }}>Nonaktif</option>
                             </select>
                         </div>
@@ -92,9 +91,9 @@
                     </svg>
                     <p class="text-sm text-gray-500">Klik atau drag & drop foto di sini</p>
                     <p class="text-xs text-gray-400 mt-1">JPG, PNG, WEBP · Maks 2MB per foto</p>
-                    <input type="file" id="imageInput" name="images[]" multiple accept="image/*" class="hidden">
+                    <input type="file" id="imageInput" name="images[]" multiple accept="image/jpeg,image/png,image/webp" class="hidden">
                 </div>
-                @error('images') <p class="form-error mt-2">{{ $message }}</p> @enderror
+                @error('images')   <p class="form-error mt-2">{{ $message }}</p> @enderror
                 @error('images.*') <p class="form-error mt-2">{{ $message }}</p> @enderror
             </div>
 
@@ -108,11 +107,9 @@
                     </button>
                 </div>
 
-                <div id="variantContainer">
-                    {{-- Diisi JS --}}
-                </div>
+                <div id="variantContainer"></div>
 
-                <p class="text-xs text-gray-400 mt-2" id="variantHint">
+                <p class="text-xs text-gray-400 mt-2" id="variantHint" style="display:none;">
                     Tambahkan minimal 1 varian dengan harga dan stok.
                 </p>
             </div>
@@ -126,7 +123,7 @@
                 <h2 class="section-title">Kategori <span class="text-red-500">*</span></h2>
 
                 <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
-                    @foreach($subCategories->groupBy('category.categoryName') as $categoryName => $subs)
+                    @foreach($subCategories->groupBy(fn($s) => $s->category?->categoryName ?? 'Lainnya') as $categoryName => $subs)
                         <div>
                             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                 {{ $categoryName }}
@@ -134,9 +131,11 @@
                             <div class="space-y-1">
                                 @foreach($subs as $sub)
                                     <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" name="sub_category_ids[]"
+                                        <input type="checkbox"
+                                            name="sub_category_ids[]"
                                             value="{{ $sub->idSubCategory }}"
-                                            class="rounded text-nusa focus:ring-nusa"
+                                            class="rounded"
+                                            style="accent-color: #008B81;"
                                             {{ in_array($sub->idSubCategory, old('sub_category_ids', [])) ? 'checked' : '' }}>
                                         <span class="text-sm text-gray-700">{{ $sub->subCategoryName }}</span>
                                     </label>
@@ -165,17 +164,21 @@
 
 {{-- ===================== JS ===================== --}}
 <script>
-    // ---- Preview gambar ----
-    let selectedFiles = [];
+    // ================================================================
+    // MANAJEMEN FOTO
+    // ================================================================
+    const MAX_IMAGES = 10;
+    let selectedFiles = new Map();
+    let fileCounter   = 0;
 
-    document.getElementById('imageInput').addEventListener('change', function(e) {
+    document.getElementById('imageInput').addEventListener('change', function (e) {
         handleFiles(Array.from(e.target.files));
+        this.value = '';
     });
 
-    // Drag & drop
     const uploadArea = document.getElementById('uploadArea');
-    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', ()  => uploadArea.classList.remove('dragover'));
     uploadArea.addEventListener('drop', e => {
         e.preventDefault();
         uploadArea.classList.remove('dragover');
@@ -184,50 +187,80 @@
 
     function handleFiles(files) {
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+
         files.forEach(file => {
-            if (!allowed.includes(file.type)) return;
-            if (selectedFiles.length >= 10) return;
-            selectedFiles.push(file);
-            renderPreview(file, selectedFiles.length - 1);
+            if (!allowed.includes(file.type)) {
+                alert(`File "${file.name}" bukan format yang didukung (JPG, PNG, WEBP).`);
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                alert(`File "${file.name}" melebihi batas 2MB.`);
+                return;
+            }
+            if (selectedFiles.size >= MAX_IMAGES) {
+                alert(`Maksimal ${MAX_IMAGES} foto.`);
+                return;
+            }
+
+            const key = fileCounter++;
+            selectedFiles.set(key, file);
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                const container = document.getElementById('imagePreviewContainer');
+                const div = document.createElement('div');
+                div.className = 'image-preview';
+                div.id = `preview-${key}`;
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="preview">
+                    ${selectedFiles.size === 1 ? '<span class="absolute bottom-0 left-0 right-0 text-center text-white text-xs py-0.5" style="background:rgba(0,139,129,.8)">Utama</span>' : ''}
+                    <button type="button" class="remove-btn" onclick="removeImage(${key})" title="Hapus">✕</button>
+                `;
+                container.appendChild(div);
+            };
+            reader.readAsDataURL(file);
         });
-        syncFileInput();
     }
 
-    function renderPreview(file, index) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            const container = document.getElementById('imagePreviewContainer');
-            const div = document.createElement('div');
-            div.className = 'image-preview';
-            div.id = `preview-${index}`;
-            div.innerHTML = `
-                <img src="${e.target.result}" alt="preview">
-                ${index === 0 ? '<span class="absolute bottom-0 left-0 right-0 text-center text-white text-xs py-0.5" style="background:rgba(0,139,129,.8)">Utama</span>' : ''}
-                <span class="remove-btn" onclick="removeImage(${index})">✕</span>
-            `;
-            container.appendChild(div);
-        };
-        reader.readAsDataURL(file);
+    function removeImage(key) {
+        selectedFiles.delete(key);
+        document.getElementById(`preview-${key}`)?.remove();
+        document.getElementById(`file-input-${key}`)?.remove();
     }
 
-    function removeImage(index) {
-        selectedFiles.splice(index, 1);
-        document.getElementById('imagePreviewContainer').innerHTML = '';
-        selectedFiles.forEach((f, i) => renderPreview(f, i));
-        syncFileInput();
-    }
+    // Inject file sebagai hidden input saat submit
+    document.getElementById('productForm').addEventListener('submit', function (e) {
+        if (selectedFiles.size === 0) {
+            e.preventDefault();
+            alert('Upload minimal 1 foto produk.');
+            return;
+        }
 
-    function syncFileInput() {
-        const dt = new DataTransfer();
-        selectedFiles.forEach(f => dt.items.add(f));
-        document.getElementById('imageInput').files = dt.files;
-    }
+        // Hapus inject lama kalau ada
+        document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
 
-    // ---- Varian produk ----
+        selectedFiles.forEach((file, key) => {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+
+            const input = document.createElement('input');
+            input.type        = 'file';
+            input.name        = 'images[]';
+            input.id          = `file-input-${key}`;
+            input.className   = 'dynamic-file-input';
+            input.style.display = 'none';
+            input.files       = dt.files;
+
+            this.appendChild(input);
+        });
+    });
+
+    // ================================================================
+    // MANAJEMEN VARIAN
+    // ================================================================
     let variantCount = 0;
 
     function addVariant() {
-        const container = document.getElementById('variantContainer');
         const idx = variantCount++;
         const div = document.createElement('div');
         div.className = 'variant-row';
@@ -237,40 +270,42 @@
                 <div class="flex-1 grid grid-cols-2 gap-3">
                     <div>
                         <label class="form-label text-xs">Tipe Variasi</label>
-                        <input type="text" name="variants[${idx}][type]" placeholder="Contoh: Warna"
-                            class="form-input text-sm">
+                        <input type="text" name="variants[${idx}][type]" placeholder="Contoh: Warna" class="form-input text-sm">
                     </div>
                     <div>
                         <label class="form-label text-xs">Nilai</label>
-                        <input type="text" name="variants[${idx}][value]" placeholder="Contoh: Merah"
-                            class="form-input text-sm">
+                        <input type="text" name="variants[${idx}][value]" placeholder="Contoh: Merah" class="form-input text-sm">
                     </div>
                     <div>
-                        <label class="form-label text-xs">Harga (Rp) *</label>
-                        <input type="number" name="variants[${idx}][price]" placeholder="0"
-                            min="0" class="form-input text-sm">
+                        <label class="form-label text-xs">Harga (Rp) <span class="text-red-500">*</span></label>
+                        <input type="number" name="variants[${idx}][price]" placeholder="0" min="0" class="form-input text-sm" required>
                     </div>
                     <div>
-                        <label class="form-label text-xs">Stok *</label>
-                        <input type="number" name="variants[${idx}][stock]" placeholder="0"
-                            min="0" class="form-input text-sm">
+                        <label class="form-label text-xs">Stok <span class="text-red-500">*</span></label>
+                        <input type="number" name="variants[${idx}][stock]" placeholder="0" min="0" class="form-input text-sm" required>
                     </div>
                     <div>
                         <label class="form-label text-xs">SKU</label>
-                        <input type="text" name="variants[${idx}][sku]" placeholder="Opsional"
-                            class="form-input text-sm">
+                        <input type="text" name="variants[${idx}][sku]" placeholder="Opsional" class="form-input text-sm">
+                    </div>
+                    <div class="flex items-end pb-1">
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                            <input type="checkbox" name="variants[${idx}][is_active]" value="1" checked
+                                class="rounded" style="accent-color: #008B81;">
+                            Aktif
+                        </label>
                     </div>
                 </div>
                 <button type="button" onclick="removeVariant(${idx})"
-                    class="mt-5 text-gray-400 hover:text-red-500 transition text-lg">✕</button>
+                    class="mt-5 text-gray-400 hover:text-red-500 transition text-lg leading-none" title="Hapus varian">✕</button>
             </div>
         `;
-        container.appendChild(div);
+        document.getElementById('variantContainer').appendChild(div);
         document.getElementById('variantHint').style.display = 'none';
     }
 
     function removeVariant(idx) {
-        document.getElementById(`variant-${idx}`).remove();
+        document.getElementById(`variant-${idx}`)?.remove();
         if (document.querySelectorAll('.variant-row').length === 0) {
             document.getElementById('variantHint').style.display = '';
         }

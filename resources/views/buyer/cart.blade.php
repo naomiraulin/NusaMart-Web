@@ -204,6 +204,9 @@
 
                     <div class="flex items-center justify-between text-sm mb-1">
                         <span class="text-gray-500">Total</span>
+                        {{-- Sebelumnya pakai {{ $total }} dari PHP (total SELURUH cart,
+                             tidak peduli dicentang atau tidak). Sekarang dihitung reaktif
+                             dari item yang dicentang lewat getter Alpine `selectedTotal`. --}}
                         <span class="font-bold text-nusa" x-text="'Rp' + selectedTotal.toLocaleString('id-ID')"></span>
                     </div>
                     <p class="text-xs text-gray-400 mb-4">

@@ -7,10 +7,21 @@
         $authId = auth()->id();
         $room = \App\Models\RoomChat::find($roomId);
         $other = null;
+        $displayName = 'Pengguna Dihapus';
+
         if ($room) {
-            $other = $room->idUser1 === $authId
-                ? $room->user2
-                : $room->user1;
+            $other = $room->idUser1 === $authId ? $room->user2 : $room->user1;
+            
+            // LOGIKA PENENTUAN NAMA TANPA MENGUBAH MODEL:
+            if ($other) {
+                if ($other->role === 'SELLER') {
+                    // Query manual ke tabel Store
+                    $store = \App\Models\Store::where('idSeller', $other->idUser)->first();
+                    $displayName = $store ? $store->name : $other->username;
+                } else {
+                    $displayName = $other->username;
+                }
+            }
         }
     @endphp
 
@@ -31,19 +42,19 @@
 
                 {{-- Avatar lawan bicara --}}
                 @if ($other?->imageURL)
-                    <img src="{{ $other->imageURL }}" alt="{{ $other->username }}"
+                    <img src="{{ asset('storage/' . $other->imageURL) }}" alt="{{ $displayName }}"
                         class="w-9 h-9 rounded-full object-cover flex-shrink-0">
                 @else
                     <div
                         class="w-9 h-9 rounded-full bg-nusa-light flex items-center justify-center text-nusa font-semibold text-sm uppercase flex-shrink-0">
-                        {{ mb_substr($other?->username ?? '?', 0, 1) }}
+                        {{ mb_substr($displayName, 0, 1) }}
                     </div>
                 @endif
 
                 {{-- Nama --}}
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold text-gray-800 truncate">
-                        {{ $other?->username ?? 'Pengguna Dihapus' }}
+                        {{ $displayName }}
                     </p>
                 </div>
             </div>
@@ -69,12 +80,12 @@
                         {{-- Avatar lawan (hanya tampil untuk pesan dari lawan) --}}
                         @if (!$isMine)
                             @if ($other?->imageURL)
-                                <img src="{{ $other->imageURL }}" alt="{{ $other->username }}"
+                                <img src="{{ asset('storage/' . $other->imageURL) }}" alt="{{ $displayName }}"
                                     class="w-7 h-7 rounded-full object-cover flex-shrink-0 self-end mb-1">
                             @else
                                 <div
                                     class="w-7 h-7 rounded-full bg-nusa-light flex items-center justify-center text-nusa font-bold text-xs uppercase flex-shrink-0 self-end mb-1">
-                                    {{ mb_substr($other?->username ?? '?', 0, 1) }}
+                                    {{ mb_substr($displayName, 0, 1) }}
                                 </div>
                             @endif
                         @endif

@@ -9,6 +9,7 @@ use App\Models\SubCategory;
 use App\Services\ProductService;
 use App\Services\StoreService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,32 +20,27 @@ class ProductController extends Controller
         private StoreService   $storeService,
     ) {}
 
-    /**
-     * Daftar produk milik seller.
-     */
-    public function index(): View
+    public function index(Request $request): View
     {
         /** @var \App\Models\User $user */
-        $user     = Auth::user();
-        $store    = $this->storeService->getBySeller($user->idUser);
-        $products = $this->productService->getByStore($store->idStore);
+        $user  = Auth::user();
+        $store = $this->storeService->getBySeller($user->idUser);
 
-        return view('seller.products.index', compact('products'));
+        $products = $this->productService->getByStore(
+            $store->idStore,
+            $request->only(['search', 'status', 'per_page']),
+        );
+
+        return view('seller.products.index', compact('store', 'products'));
     }
 
-    /**
-     * Form tambah produk baru.
-     */
     public function create(): View
     {
-        $subCategories = SubCategory::with('category')->get();
+        $subCategories = SubCategory::with('category')->get(); // hapus ->where('isActive', true)
 
         return view('seller.products.create', compact('subCategories'));
     }
 
-    /**
-     * Simpan produk baru.
-     */
     public function store(StoreProductRequest $request): RedirectResponse
     {
         /** @var \App\Models\User $user */
@@ -56,44 +52,65 @@ class ProductController extends Controller
             $request->validated(),
             $request->file('images', []),
             $request->input('sub_category_ids', []),
+            $request->input('variants', []),
         );
 
         return redirect()->route('seller.products.index')
             ->with('success', 'Produk berhasil ditambahkan.');
     }
 
-    /**
-     * Form edit produk.
-     */
     public function edit(string $id): View
     {
-        $product       = $this->productService->getById($id);
-        $subCategories = SubCategory::with('category')->get();
+        /** @var \App\Models\User $user */
+        $user    = Auth::user();
+        $store   = $this->storeService->getBySeller($user->idUser);
+        $product = $this->productService->getById($id);
+
+        if ($product->idStore !== $store->idStore) {
+            abort(403, 'Anda tidak memiliki akses ke produk ini.');
+        }
+
+        $subCategories = SubCategory::with('category')->get(); // hapus ->where('isActive', true)
 
         return view('seller.products.edit', compact('product', 'subCategories'));
     }
 
-    /**
-     * Update produk.
-     */
     public function update(UpdateProductRequest $request, string $id): RedirectResponse
     {
+        /** @var \App\Models\User $user */
+        $user    = Auth::user();
+        $store   = $this->storeService->getBySeller($user->idUser);
+        $product = $this->productService->getById($id);
+
+        if ($product->idStore !== $store->idStore) {
+            abort(403, 'Anda tidak memiliki akses ke produk ini.');
+        }
+
         $this->productService->update(
             $id,
             $request->validated(),
             $request->file('images', []),
             $request->input('sub_category_ids', []),
+            $request->input('delete_images', []),       // ID gambar yang dicentang untuk dihapus
+            $request->input('existing_variants', []),   // Varian lama yang diedit
+            $request->input('variants', []),            // Varian baru yang ditambahkan
         );
 
         return redirect()->route('seller.products.index')
             ->with('success', 'Produk berhasil diperbarui.');
     }
 
-    /**
-     * Hapus produk.
-     */
     public function destroy(string $id): RedirectResponse
     {
+        /** @var \App\Models\User $user */
+        $user    = Auth::user();
+        $store   = $this->storeService->getBySeller($user->idUser);
+        $product = $this->productService->getById($id);
+
+        if ($product->idStore !== $store->idStore) {
+            abort(403, 'Anda tidak memiliki akses ke produk ini.');
+        }
+
         $this->productService->delete($id);
 
         return redirect()->route('seller.products.index')

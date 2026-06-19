@@ -19,13 +19,18 @@ class PaymentService
     ) {}
 
     /**
-     * Buat payment baru untuk order.
+     * Buat payment baru.
+     *
+     * Sebelumnya hanya menerima $orderId, sekarang menerima userId dan totalAmount
+     * secara eksplisit karena satu payment bisa mencakup beberapa order (multi-store).
      */
-    public function create(string $orderId, string $methodId): Payment
+    public function create(string $userId, string $methodId, float $totalAmount): Payment
     {
         return $this->paymentRepository->create([
             'idPayment'            => $this->idGenerator->generate('PAY', Payment::class, 'idPayment'),
+            'idUser'               => $userId,
             'idMethod'             => $methodId,
+            'totalAmount'          => $totalAmount,
             'transactionIdGateway' => null,
             'snapToken'            => null,
             'paymentStatus'        => 'PENDING',
@@ -49,16 +54,12 @@ class PaymentService
         return DB::transaction(function () use ($paymentId) {
             $payment = $this->paymentRepository->updateStatus($paymentId, 'APPROVED');
 
-            // Ambil order terkait
-            $order = $this->orderRepository->findById(
-                \App\Models\Order::where('paymentId', $paymentId)->value('idOrder')
-            );
+            // Ambil semua order yang terkait payment ini
+            $orders = \App\Models\Order::where('idPayment', $paymentId)->get();
 
-            if ($order) {
-                // Update status order jadi PROCESSED
+            foreach ($orders as $order) {
                 $this->orderRepository->updateStatus($order->idOrder, 'PROCESSED');
 
-                // Tambah outstanding balance wallet seller
                 $wallet = $this->walletRepository->findByStore($order->idStore);
 
                 if ($wallet) {
@@ -69,11 +70,11 @@ class PaymentService
                     );
 
                     $this->walletRepository->addTransaction([
-                        'idWallet'    => $wallet->idWallet,
-                        'mutationType'=> 'IN',
-                        'nominal'     => $order->grandTotal,
-                        'description' => "Pembayaran order {$order->invoiceNumber}",
-                        'referenceId' => $order->idOrder,
+                        'idWallet'     => $wallet->idWallet,
+                        'mutationType' => 'IN',
+                        'nominal'      => $order->grandTotal,
+                        'description'  => "Pembayaran order {$order->invoiceNumber}",
+                        'referenceId'  => $order->idOrder,
                     ]);
                 }
             }
@@ -98,7 +99,7 @@ class PaymentService
         $path = $image->store("payments/{$paymentId}", 'public');
 
         $payment = $this->paymentRepository->findById($paymentId);
-        $payment->update(['imageurl' => $path]);
+        $payment->update(['imageURL' => $path]);
 
         return $payment->fresh();
     }

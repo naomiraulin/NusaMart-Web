@@ -24,15 +24,20 @@ class OrderController extends Controller
 
     /**
      * Daftar semua order masuk ke toko seller.
+     * Bisa difilter lewat query string ?status=PENDING dst.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         /** @var \App\Models\User $user */
         $user   = Auth::user();
         $store  = $this->storeService->getBySeller($user->idUser);
-        $orders = $this->orderService->getByStore($store->idStore);
 
-        return view('seller.orders.index', compact('orders'));
+        $status = $request->query('status');
+
+        $orders       = $this->orderService->getByStore($store->idStore, $status);
+        $statusCounts = $this->orderService->getStatusCounts($store->idStore);
+
+        return view('seller.orders.index', compact('orders', 'statusCounts'));
     }
 
     /**
@@ -56,6 +61,19 @@ class OrderController extends Controller
 
         return redirect()->route('seller.orders.show', $id)
             ->with('success', 'Order berhasil dikonfirmasi.');
+    }
+
+    /**
+     * Batalkan order — ubah status ke CANCELLED.
+     */
+    public function cancel(string $id): RedirectResponse
+    {
+        $order = $this->orderService->updateStatus($id, 'CANCELLED', 'SELLER');
+
+        $this->notificationService->sendOrderNotif($order->idUser, $order->idOrder, 'CANCELLED');
+
+        return redirect()->route('seller.orders.show', $id)
+            ->with('success', 'Order berhasil dibatalkan.');
     }
 
     /**

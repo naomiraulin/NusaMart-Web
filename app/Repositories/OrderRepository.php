@@ -24,16 +24,32 @@ class OrderRepository
 
     /**
      * Ambil semua order yang masuk ke store (untuk seller).
+     * Bisa difilter berdasarkan status order.
      */
-    public function findByStore(string $storeId): LengthAwarePaginator
+    public function findByStore(string $storeId, ?string $status = null): LengthAwarePaginator
     {
         return Order::with([
             'orderItems.productItem.product',
             'shipping',
         ])
             ->where('idStore', $storeId)
+            ->when($status, fn ($query) => $query->where('orderStatus', $status))
             ->orderBy('orderDate', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    /**
+     * Hitung jumlah order per status untuk satu store.
+     * Dipakai untuk badge angka di tab filter.
+     */
+    public function countByStatusForStore(string $storeId): array
+    {
+        return Order::where('idStore', $storeId)
+            ->selectRaw('orderStatus, count(*) as total')
+            ->groupBy('orderStatus')
+            ->pluck('total', 'orderStatus')
+            ->toArray();
     }
 
     /**
@@ -42,11 +58,11 @@ class OrderRepository
     public function findById(string $id)
     {
         return Order::with([
-            'orderItems.productItem.product.productImages', 
+            'orderItems.productItem.product.productImages',
             'store',
-            'shipping.courier',           // <--- INI HARUS BERUBAH JADI courier
+            'shipping.courier',
             'shipping.shippingTrackings',
-            'address',                    // <--- INI HARUS BERUBAH JADI address
+            'address',
             'payment.paymentMethod',
         ])->where('idOrder', $id)->first();
     }

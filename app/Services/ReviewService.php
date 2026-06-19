@@ -77,10 +77,17 @@ class ReviewService
             // Upload gambar review jika ada
             if (!empty($images)) {
                 foreach ($images as $image) {
+                    // 1. Simpan file fisik ke storage (folder: storage/app/public/reviews/{idReview})
                     $path = $image->store("reviews/{$review->idReview}", 'public');
+                    
+                    // 2. Tambahkan prefix 'storage/' untuk disimpan ke database
+                    $dbPath = 'storage/' . $path;
+                    
                     ReviewImage::create([
-                        'idReview' => $review->idReview,
-                        'urlImage' => $path,
+                        // TAMBAHKAN BARIS INI (Format ID bisa disesuaikan, misalnya 'RVI')
+                        'idRevImage' => $this->idGenerator->generate('RVI', ReviewImage::class, 'idRevImage'),
+                        'idReview'   => $review->idReview,
+                        'urlImage'   => $path,
                     ]);
                 }
             }

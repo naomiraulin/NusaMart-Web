@@ -3,6 +3,10 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductImage;
+use App\Models\ProductItem;
+use App\Models\ProductSubcategory;
+use App\Models\ProductVariation;
 use App\Repositories\ProductRepository;
 use App\Services\IdGeneratorService;
 use Illuminate\Http\UploadedFile;
@@ -17,17 +21,11 @@ class ProductService
         private IdGeneratorService $idGenerator,
     ) {}
 
-    /**
-     * Ambil daftar produk dengan filter.
-     */
     public function getAll(array $filters = []): LengthAwarePaginator
     {
         return $this->productRepository->findAll($filters);
     }
 
-    /**
-     * Ambil detail produk.
-     */
     public function getById(string $id): Product
     {
         $product = $this->productRepository->findById($id);
@@ -39,21 +37,14 @@ class ProductService
         return $product;
     }
 
-    /**
-     * Ambil produk milik store tertentu.
-     */
-    public function getByStore(string $storeId): LengthAwarePaginator
+    public function getByStore(string $storeId, array $filters = []): LengthAwarePaginator
     {
-        return $this->productRepository->findByStore($storeId);
+        return $this->productRepository->findByStore($storeId, $filters);
     }
 
-    /**
-     * Buat produk baru beserta gambar dan subkategori.
-     */
-    public function create(string $storeId, array $data, array $images = [], array $subCategoryIds = []): Product
+    public function create(string $storeId, array $data, array $images = [], array $subCategoryIds = [], array $variants = []): Product
     {
-        return DB::transaction(function () use ($storeId, $data, $images, $subCategoryIds) {
-            // 1. Buat produk
+        return DB::transaction(function () use ($storeId, $data, $images, $subCategoryIds, $variants) {
             $product = $this->productRepository->create([
                 'idProduct'     => $this->idGenerator->generate('PRD', Product::class, 'idProduct'),
                 'idStore'       => $storeId,
@@ -63,148 +54,179 @@ class ProductService
                 'productStatus' => $data['product_status'] ?? 'ACTIVE',
             ]);
 
-            // 2. Upload & simpan gambar
             if (!empty($images)) {
                 $this->saveImages($product->idProduct, $images);
             }
 
-            // 3. Attach subkategori
             if (!empty($subCategoryIds)) {
-                foreach ($subCategoryIds as $subCatId) {
-                    \App\Models\ProductSubcategory::create([
-                        'idProductSubCat' => $this->idGenerator->generate('PSC', \App\Models\ProductSubcategory::class, 'idProductSubCat'),
-                        'idProduct'       => $product->idProduct,
-                        'idSubCategory'   => $subCatId,
+                $this->attachSubCategories($product->idProduct, $subCategoryIds);
+            }
+
+            if (!empty($variants)) {
+                $this->saveVariants($product->idProduct, $variants);
+            }
+
+            return $product->load(['productImages', 'subCategories', 'productItems.productVariations']);
+        });
+    }
+
+    public function update(
+        string $id,
+        array  $data,
+        array  $newImages      = [],
+        array  $subCategoryIds = [],
+        array  $deleteImageIds = [],
+        array  $existingVariants = [],
+        array  $newVariants    = [],
+    ): Product {
+        return DB::transaction(function () use ($id, $data, $newImages, $subCategoryIds, $deleteImageIds, $existingVariants, $newVariants) {
+            // 1. Update field dasar produk
+            $updateData = [];
+            if (isset($data['product_name']))   $updateData['productName']   = $data['product_name'];
+            if (isset($data['description']))     $updateData['description']   = $data['description'];
+            if (isset($data['weight_gram']))     $updateData['weightGram']    = $data['weight_gram'];
+            if (isset($data['product_status']))  $updateData['productStatus'] = $data['product_status'];
+
+            $product = $this->productRepository->update($id, $updateData);
+
+            // 2. Hapus gambar yang dicentang seller
+            if (!empty($deleteImageIds)) {
+                $toDelete = ProductImage::where('idProduct', $product->idProduct)
+                    ->whereIn('idImage', $deleteImageIds)
+                    ->get();
+
+                foreach ($toDelete as $img) {
+                    Storage::disk('public')->delete(str_replace('storage/', '', $img->imageURL)); // ← sama
+                    $img->delete();
+                }
+
+                // Jika gambar utama ikut dihapus, jadikan gambar pertama yang tersisa sebagai utama
+                $stillHasPrimary = ProductImage::where('idProduct', $product->idProduct)
+                    ->where('isPrimary', true)
+                    ->exists();
+
+                if (!$stillHasPrimary) {
+                    $first = ProductImage::where('idProduct', $product->idProduct)->first();
+                    $first?->update(['isPrimary' => true]);
+                }
+            }
+
+            // 3. Tambah gambar baru dengan mematuhi batas maksimal 10
+            if (!empty($newImages)) {
+                $existingCount = ProductImage::where('idProduct', $product->idProduct)->count();
+                $sisa          = 10 - $existingCount;
+
+                if ($sisa > 0) {
+                    $this->saveImages($product->idProduct, array_slice($newImages, 0, $sisa), $existingCount === 0);
+                }
+            }
+
+            // 4. Sinkronisasi subkategori
+            if (!empty($subCategoryIds)) {
+                ProductSubcategory::where('idProduct', $product->idProduct)->delete();
+                $this->attachSubCategories($product->idProduct, $subCategoryIds);
+            }
+
+            // 5. Update varian yang sudah ada
+            foreach ($existingVariants as $itemId => $variantData) {
+                $item = ProductItem::where('idItem', $itemId)
+                    ->where('idProduct', $product->idProduct) // pastikan milik produk ini
+                    ->first();
+
+                if (!$item) continue;
+
+                $item->update([
+                    'price'    => $variantData['price']    ?? $item->price,
+                    'stock'    => $variantData['stock']    ?? $item->stock,
+                    'sku'      => $variantData['sku']      ?? $item->sku,
+                    'isActive' => isset($variantData['is_active']) ? true : false,
+                ]);
+
+                // Update variasi (type & value)
+                $variation = $item->productVariations()->first();
+                if ($variation) {
+                    $variation->update([
+                        'typeVariation' => $variantData['type']  ?? $variation->typeVariation,
+                        'value'         => $variantData['value'] ?? $variation->value,
                     ]);
                 }
             }
 
-            return $product->load(['productImages', 'subCategories']);
+            // 6. Tambah varian baru
+            if (!empty($newVariants)) {
+                $this->saveVariants($product->idProduct, $newVariants);
+            }
+
+            return $product->load(['productImages', 'subCategories', 'productItems.productVariations']);
         });
     }
 
-    /**
-     * Update produk.
-     */
-    public function update(string $id, array $data, array $newImages = [], array $subCategoryIds = []): Product
-    {
-        return DB::transaction(function () use ($id, $data, $newImages, $subCategoryIds) {
-            $updateData = array_filter([
-                'productName'   => $data['product_name'] ?? null,
-                'description'   => $data['description'] ?? null,
-                'weightGram'    => $data['weight_gram'] ?? null,
-                'productStatus' => $data['product_status'] ?? null,
-            ]);
-
-            $product = $this->productRepository->update($id, $updateData);
-
-            if (!empty($newImages)) {
-                $this->saveImages($product->idProduct, $newImages);
-            }
-
-            if (!empty($subCategoryIds)) {
-            // Hapus yang lama dulu
-            \App\Models\ProductSubcategory::where('idProduct', $product->idProduct)->delete();
-            
-            // Insert yang baru
-            foreach ($subCategoryIds as $subCatId) {
-                \App\Models\ProductSubcategory::create([
-                    'idProductSubCat' => $this->idGenerator->generate('PSC', \App\Models\ProductSubcategory::class, 'idProductSubCat'),
-                    'idProduct'       => $product->idProduct,
-                    'idSubCategory'   => $subCatId,
-                ]);
-            }
-        }
-
-            return $product->load(['productImages', 'subCategories']);
-        });
-    }
-
-    /**
-     * Hapus produk.
-     */
     public function delete(string $id): bool
     {
-        // Hapus gambar dari storage dulu
         $product = $this->productRepository->findById($id);
 
-        if ($product) {
-            foreach ($product->productImages as $image) {
-                Storage::disk('public')->delete($image->imageURL);
-            }
+        if (!$product) {
+            abort(404, 'Produk tidak ditemukan.');
+        }
+
+        foreach ($product->productImages as $image) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $image->imageURL)); // ← strip storage/ dulu
         }
 
         return $this->productRepository->delete($id);
     }
 
-    /**
-     * Upload dan simpan gambar produk.
-     * Maks 10 gambar per produk.
-     */
-    private function saveImages(string $productId, array $images): void
+    private function saveImages(string $productId, array $images, bool $firstAsPrimary = true): void
     {
         foreach ($images as $index => $image) {
             if (!$image instanceof UploadedFile) continue;
 
             $path = $image->store("products/{$productId}", 'public');
 
-            \App\Models\ProductImage::create([
-                'idImage'   => $this->idGenerator->generate('IMG', \App\Models\ProductImage::class, 'idImage'),
+            ProductImage::create([
+                'idImage'   => $this->idGenerator->generate('IMG', ProductImage::class, 'idImage'),
                 'idProduct' => $productId,
-                'imageURL'  => $path,
-                'isPrimary' => $index === 0,
+                'imageURL'  => 'storage/' . $path, // ← tambah prefix storage/
+                'isPrimary' => $firstAsPrimary && $index === 0,
             ]);
         }
     }
 
-    /**
-     * Mencari produk berdasarkan kata kunci dan filter (sort, min_price, max_price).
-     * Diperuntukkan untuk halaman pencarian publik.
-     */
-    public function searchProducts(array $filters): LengthAwarePaginator
+    private function attachSubCategories(string $productId, array $subCategoryIds): void
     {
-        // 1. Inisialisasi query dengan Eager Loading untuk mencegah N+1 query problem
-        $query = Product::with(['productImages', 'productItems', 'store']);
-
-        // Pastikan hanya mencari produk yang statusnya ACTIVE
-        // Catatan: Jika saat testing data tidak muncul, pastikan isi kolom productStatus
-        // di database kamu benar-benar huruf kapital 'ACTIVE'. Jika tidak, komentari baris ini sementara.
-        $query->where('productStatus', 'ACTIVE'); 
-
-        // 2. Filter Kata Kunci Pencarian
-        if (!empty($filters['search'])) {
-            $query->where('productName', 'like', '%' . $filters['search'] . '%');
+        foreach ($subCategoryIds as $subCatId) {
+            ProductSubcategory::create([
+                'idProductSubCat' => $this->idGenerator->generate('PSC', ProductSubcategory::class, 'idProductSubCat'),
+                'idProduct'       => $productId,
+                'idSubCategory'   => $subCatId,
+            ]);
         }
+    }
 
-        // 3. Filter Harga Minimum
-        // Menggunakan whereHas untuk mencari harga di dalam tabel relasi productItems
-        if (isset($filters['min_price']) && $filters['min_price'] !== '') {
-            $query->whereHas('productItems', function ($q) use ($filters) {
-                $q->where('price', '>=', $filters['min_price']);
-            });
-        }
+    private function saveVariants(string $productId, array $variants): void
+    {
+        foreach ($variants as $variantData) {
+            // Harga dan stok wajib ada, skip jika tidak
+            if (!isset($variantData['price']) || !isset($variantData['stock'])) continue;
 
-        // 4. Filter Harga Maksimum
-        if (isset($filters['max_price']) && $filters['max_price'] !== '') {
-            $query->whereHas('productItems', function ($q) use ($filters) {
-                $q->where('price', '<=', $filters['max_price']);
-            });
-        }
+            $item = ProductItem::create([
+                'idItem'     => $this->idGenerator->generate('ITM', ProductItem::class, 'idItem'),
+                'idProduct'  => $productId,
+                'sku'        => $variantData['sku']      ?? null,
+                'stock'      => $variantData['stock'],
+                'price'      => $variantData['price'],
+                'isActive'   => isset($variantData['is_active']) ? true : true, // default aktif saat dibuat
+            ]);
 
-        // 5. Sorting (Pengurutan)
-        $sort = $filters['sort'] ?? 'semua';
-        
-        if ($sort === 'termurah') {
-            $query->withMin('productItems', 'price')->orderBy('product_items_min_price', 'asc');
-        } elseif ($sort === 'termahal') {
-            $query->withMax('productItems', 'price')->orderBy('product_items_max_price', 'desc');
-        } else {
-            // FIX: Ganti 'created_at' menjadi kolom yang pasti ada di tabel products kamu.
-            // Misalnya kita urutkan berdasarkan produk terbaru dari ID-nya:
-            $query->orderBy('idProduct', 'desc'); 
+            // Simpan variasi hanya jika type & value diisi
+            if (!empty($variantData['type']) && !empty($variantData['value'])) {
+                ProductVariation::create([
+                    'idVariation'   => $this->idGenerator->generate('VAR', ProductVariation::class, 'idVariation'),
+                    'idItem'        => $item->idItem,
+                    'typeVariation' => $variantData['type'],
+                    'value'         => $variantData['value'],
+                ]);
+            }
         }
-        
-        return $query->paginate(12);
-        
     }
 }
