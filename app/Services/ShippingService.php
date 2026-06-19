@@ -26,7 +26,39 @@ class ShippingService
     }
 
     /**
-     * Buat data shipping setelah seller konfirmasi order.
+     * Konfirmasi pengiriman: shipping record sudah ada sejak buyer checkout
+     * (kurir sudah dipilih, status WAITING, resi & shippingDate masih kosong).
+     * Seller cukup klik konfirmasi -> generate resi & tanggal kirim, ubah status order ke SHIPPED.
+     */
+    public function confirm(string $orderId): Shipping
+    {
+        return DB::transaction(function () use ($orderId) {
+            $shipping = $this->shippingRepository->findByOrder($orderId);
+
+            if (!$shipping) {
+                abort(404, 'Data pengiriman untuk order ini tidak ditemukan.');
+            }
+
+            $shipping = $this->shippingRepository->confirm($shipping->idShipping, [
+                'resi'           => $shipping->resi ?? $this->generateResi(),
+                'shippingDate'   => now(),
+                'shippingStatus' => 'PICKED_UP',
+            ]);
+
+            $this->shippingRepository->addTracking($shipping->idShipping, [
+                'description' => 'Pesanan telah dikonfirmasi dan siap diambil kurir.',
+            ]);
+
+            // Update status order jadi SHIPPED
+            $this->orderRepository->updateStatus($orderId, 'SHIPPED');
+
+            return $shipping;
+        });
+    }
+
+    /**
+     * Buat data shipping baru secara manual.
+     * Disisakan untuk kasus shipping belum ada sama sekali (data lama / fallback).
      */
     public function create(string $orderId, string $courierId, float $shippingPrice): Shipping
     {
@@ -37,15 +69,14 @@ class ShippingService
                 'idCourier'      => $courierId,
                 'resi'           => $this->generateResi(),
                 'shippingPrice'  => $shippingPrice,
+                'shippingDate'   => now(),
                 'shippingStatus' => 'WAITING',
             ]);
 
-            // Tambah tracking awal
             $this->shippingRepository->addTracking($shipping->idShipping, [
                 'description' => 'Pesanan sedang disiapkan oleh seller.',
             ]);
 
-            // Update status order jadi SHIPPED
             $this->orderRepository->updateStatus($orderId, 'SHIPPED');
 
             return $shipping;

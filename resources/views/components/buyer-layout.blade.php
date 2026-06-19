@@ -156,13 +156,8 @@
 
     {{-- FOOTER --}}
     <footer class="bg-white border-t border-gray-200 mt-auto">
-        <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-2 text-sm text-gray-400">
+        <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-center gap-2 text-center text-gray-400">
             <p>&copy; {{ date('Y') }} NusaMart. All rights reserved.</p>
-            <div class="flex gap-4">
-                <a href="#" class="hover:text-nusa transition">Tentang Kami</a>
-                <a href="#" class="hover:text-nusa transition">Kebijakan Privasi</a>
-                <a href="#" class="hover:text-nusa transition">Bantuan</a>
-            </div>
         </div>
     </footer>
 

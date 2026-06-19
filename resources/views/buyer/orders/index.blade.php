@@ -122,7 +122,7 @@
                         </a>
                         
                         @if($status === 'pending')
-                            <a href="#" class="px-5 py-2 bg-nusa text-white text-sm font-bold rounded-lg hover:bg-nusa-dark shadow-sm shadow-nusa/20 transition-all duration-200">
+                            <a href="{{ route('buyer.orders.payment', $order->idOrder) }}" class="px-5 py-2 bg-nusa text-white text-sm font-bold rounded-lg hover:bg-nusa-dark shadow-sm shadow-nusa/20 transition-all duration-200">
                                 Bayar Sekarang
                             </a>
                         @elseif($status === 'shipped')

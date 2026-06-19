@@ -215,7 +215,7 @@
                 {{-- TOMBOL AKSI --}}
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-3">
                     @if($status === 'pending')
-                        <a href="#" class="block w-full py-3 px-4 bg-nusa text-white text-center text-sm font-bold rounded-xl hover:bg-nusa-dark shadow-sm shadow-nusa/20 transition-all duration-200">
+                        <a href="{{ route('buyer.orders.payment', $order->idOrder) }}" class="px-5 py-2 bg-nusa text-white text-sm font-bold rounded-lg hover:bg-nusa-dark shadow-sm shadow-nusa/20 transition-all duration-200">
                             Bayar Sekarang
                         </a>
                         <form action="{{ route('buyer.orders.cancel', $order->idOrder) }}" method="POST">

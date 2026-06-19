@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Shipping;
 use App\Repositories\CartRepository;
 use App\Repositories\OrderRepository;
 use App\Services\IdGeneratorService;
@@ -116,7 +117,7 @@ class OrderService
                 fn($item) => $item->productItem->product->idStore
             );
 
-            $storeCount   = $groupedByStore->count();
+            $storeCount         = $groupedByStore->count();
             $serviceFeePerStore = $storeCount > 0 ? round($servicePrice / $storeCount) : 0;
 
             $createdOrders = collect();
@@ -131,7 +132,7 @@ class OrderService
                     ]);
                 }
 
-                $productTotal = $items->sum(
+                $productTotal    = $items->sum(
                     fn($item) => $item->productItem->price * $item->quantity
                 );
                 $shippingCost    = (float) ($storeData['shipping_cost'] ?? 0);
@@ -167,6 +168,18 @@ class OrderService
                     $cartItem->productItem->decrement('stock', $cartItem->quantity);
                 }
 
+                // Buat shipping untuk order ini (kurir sudah dipilih user saat checkout)
+                Shipping::create([
+                    'idShipping'     => $this->idGenerator->generate('SHP', Shipping::class, 'idShipping'),
+                    'idOrder'        => $order->idOrder,
+                    'idCourier'      => $storeData['id_courier'],
+                    'resi'           => null,
+                    'shippingPrice'  => $shippingCost,
+                    'shippingStatus' => 'WAITING',
+                    'shippingDate'   => null,
+                    'deliveredDate'  => null,
+                ]);
+
                 $grandTotal += $storeGrandTotal;
                 $createdOrders->push($this->orderRepository->findById($order->idOrder));
             }
@@ -195,7 +208,7 @@ class OrderService
         float  $servicePrice = 0
     ): array {
         return DB::transaction(function () use ($userId, $itemId, $quantity, $storeData, $idAddress, $servicePrice) {
-            
+
             // 1. Validasi Item & Stok
             $productItem = \App\Models\ProductItem::with('product')->findOrFail($itemId);
 
@@ -206,10 +219,10 @@ class OrderService
             }
 
             // 2. Kalkulasi Biaya
-            $idStore = $productItem->product->idStore;
+            $idStore      = $productItem->product->idStore;
             $productTotal = $productItem->price * $quantity;
             $shippingCost = (float) ($storeData['shipping_cost'] ?? 0);
-            $grandTotal = $productTotal + $shippingCost + $servicePrice;
+            $grandTotal   = $productTotal + $shippingCost + $servicePrice;
 
             // 3. Buat Order
             $order = $this->orderRepository->create([
@@ -238,6 +251,18 @@ class OrderService
             ]);
 
             $productItem->decrement('stock', $quantity);
+
+            // 5. Buat Shipping (kurir sudah dipilih user saat checkout)
+            Shipping::create([
+                'idShipping'     => $this->idGenerator->generate('SHP', Shipping::class, 'idShipping'),
+                'idOrder'        => $order->idOrder,
+                'idCourier'      => $storeData['id_courier'],
+                'resi'           => null,
+                'shippingPrice'  => $shippingCost,
+                'shippingStatus' => 'WAITING',
+                'shippingDate'   => null,
+                'deliveredDate'  => null,
+            ]);
 
             // Return format array seperti checkoutMultiStore
             return [

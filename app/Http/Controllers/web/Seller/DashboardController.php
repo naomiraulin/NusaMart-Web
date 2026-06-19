@@ -25,15 +25,15 @@ class DashboardController extends Controller
 
         $recentOrders  = $this->orderService->getByStore($store->idStore);
         $wallet        = $this->walletService->getByStore($store->idStore);
+        $statusCounts  = $this->orderService->getStatusCounts($store->idStore); // ← tambah ini
 
-        // Statistik ringkas
         $stats = [
-            'total_orders'    => $recentOrders->total(),
-            'active_balance'  => $wallet->activeBalance,
-            'outstanding'     => $wallet->outstandingBalance,
-            'store_rating'    => $store->storeRating ?? 0,
+            'total_orders'   => $recentOrders->total(),
+            'active_balance' => $wallet->activeBalance,
+            'outstanding'    => $wallet->outstandingBalance,
+            'store_rating'   => $store->storeRating ?? 0,
         ];
 
-        return view('seller.dashboard', compact('store', 'recentOrders', 'wallet', 'stats'));
+        return view('seller.dashboard', compact('store', 'recentOrders', 'wallet', 'stats', 'statusCounts')); // ← tambah statusCounts
     }
 }

@@ -14,7 +14,7 @@
             <h1 class="text-4xl font-extrabold text-nusa-dark mb-2">Beli Produk Lokal di NusaMart!</h1>
             <p class="text-lg text-gray-500">Pilihan lengkap dan hemat</p>
         </div>
-        <img src="{{ asset('images/banner-illustration.png') }}" alt="Ilustrasi belanja online" class="w-80 h-auto object-contain hidden md:block">
+        <img src="{{ asset('image/homepage_ilustration.png') }}" alt="Ilustrasi belanja online" class="w-80 h-auto object-contain hidden md:block">
     </div>
 
     {{-- GRID PRODUK --}}

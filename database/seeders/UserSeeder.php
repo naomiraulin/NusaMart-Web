@@ -11,6 +11,18 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $users = [
+            // --- Akun Admin Tambahan ---
+            [
+                'idUser'   => 'ADM-000001',
+                'username' => 'admin_super',
+                'email'    => 'admin@nusamart.com',
+                'password' => bcrypt('123'),
+                'phone'    => '081111111111',
+                'role'     => 'ADMIN',
+                'createAt' => '2026-01-01 08:00:00',
+                'updateAt' => '2026-05-14 10:00:00',
+                'imageURL' => null
+            ],
             [
                 'idUser'   => 'BYR-000001',
                 'username' => 'trisa',

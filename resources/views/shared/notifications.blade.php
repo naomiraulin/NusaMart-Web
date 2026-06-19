@@ -114,18 +114,6 @@
             border-color: #b2dfdb;
         }
 
-        .notif-item.unread::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 60%;
-            background: #008B81;
-            border-radius: 0 2px 2px 0;
-        }
-
         .notif-icon {
             flex-shrink: 0;
             width: 2.25rem;

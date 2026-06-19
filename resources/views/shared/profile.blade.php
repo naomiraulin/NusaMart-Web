@@ -387,6 +387,52 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── MASUKKAN STYLE MODAL BARU DISINI ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #fff;
+            border-radius: 0.75rem;
+            max-width: 540px;
+            width: 100%;
+            padding: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .modal-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #9ca3af;
+            line-height: 1;
+        }
+        .modal-close-btn:hover { color: #374151; }
     </style>
 
     <div class="profile-page">
@@ -476,13 +522,14 @@
                     <div class="profile-card-title">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
                         Alamat Saya
                     </div>
-                    <button type="button" class="btn-add-address">
+                    {{-- DIUBAH: Ditambahkan trigger click untuk membuka modal baru --}}
+                    <button type="button" class="btn-add-address" onclick="openAddAddressModal()">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
@@ -505,7 +552,6 @@
                                 @endif
                             </div>
                             
-                            {{-- Field-field ini merujuk ke tabel User Address  --}}
                             <div class="address-details">
                                 <strong>{{ $address->receiver }}</strong> | {{ $address->phone }}<br>
                                 {{ $address->completeAddress }}<br>
@@ -513,10 +559,19 @@
                             </div>
                             
                             <div class="address-actions">
-                                <button type="button" class="btn-outline">Ubah</button>
-                                @if(!$address->isDefault)
-                                    <button type="button" class="btn-select">Pilih</button>
-                                @endif
+                                {{-- DIUBAH: Ditambahkan dataset attributes untuk mempermudah transfer data ke modal Ubah --}}
+                                <button type="button" class="btn-outline btn-edit-address"
+                                        data-id="{{ $address->idAddress }}"
+                                        data-label="{{ $address->label }}"
+                                        data-receiver="{{ $address->receiver }}"
+                                        data-phone="{{ $address->phone }}"
+                                        data-complete="{{ $address->completeAddress }}"
+                                        data-city="{{ $address->city }}"
+                                        data-province="{{ $address->province }}"
+                                        data-postal="{{ $address->postalCode }}"
+                                        data-default="{{ $address->isDefault ? '1' : '0' }}">
+                                    Ubah
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -567,14 +622,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+                                          -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-
+    
             {{-- ── Info Seller (readonly, hanya tampil) ── --}}
             @if(auth()->user()->role === 'SELLER' && auth()->user()->seller)
                 <div class="profile-card">
@@ -608,7 +664,7 @@
                 </div>
             @endif
 
-            {{-- ── Tombol simpan ── --}}
+            {{-- ── Tombol simpan profil ── --}}
             <div class="form-footer">
                 <button type="submit" class="btn-save" id="saveBtn">
                     <div class="spinner" id="spinner"></div>
@@ -623,7 +679,60 @@
 
     </div>
 
-    {{-- JS dikumpul di bawah --}}
+    {{-- ── POP-UP MODAL ALAMAT (DIBUAT COCOK DENGAN THEME KAMU) ── --}}
+    <div class="modal-overlay" id="addressModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalTitle">Tambahkan Alamat Baru</h4>
+                <button type="button" class="modal-close-btn" onclick="closeAddressModal()">&times;</button>
+            </div>
+            
+            <form action="" method="POST" id="addressForm">
+                <div id="modalMethodContainer"></div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Label Alamat</label>
+                        <input type="text" name="label" id="modal_label" class="form-input" placeholder="Contoh: Rumah, Kantor" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Penerima</label>
+                        <input type="text" name="receiver" id="modal_receiver" class="form-input" placeholder="Nama Lengkap" required>
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">Nomor HP Penerima</label>
+                        <input type="text" name="phone" id="modal_phone" class="form-input" placeholder="08xxxxxxxxxx" required>
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">Alamat Lengkap</label>
+                        <textarea name="completeAddress" id="modal_completeAddress" class="form-input" rows="3" placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan/kecamatan" style="resize: none; font-family: inherit;" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kota / Kabupaten</label>
+                        <input type="text" name="city" id="modal_city" class="form-input" placeholder="Kota" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Provinsi</label>
+                        <input type="text" name="province" id="modal_province" class="form-input" placeholder="Provinsi" required>
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">Kode Pos</label>
+                        <input type="text" name="postalCode" id="modal_postalCode" class="form-input" placeholder="Kode Pos" required>
+                    </div>
+                    <div class="form-group full" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                        <input type="checkbox" name="isDefault" id="modal_isDefault" value="1" style="width: auto; cursor: pointer;">
+                        <label for="modal_isDefault" class="form-label" style="cursor: pointer; margin-bottom: 0; font-weight: 500;">Jadikan sebagai Alamat Utama</label>
+                    </div>
+                </div>
+
+                <div class="form-footer" style="margin-top: 1.5rem; border-top: 1px solid #f3f4f6; padding-top: 1rem;">
+                    <button type="button" class="btn-outline" onclick="closeAddressModal()">Batal</button>
+                    <button type="submit" class="btn-save">Simpan Alamat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         /* ── Preview foto sebelum upload ── */
         const imageInput    = document.getElementById('imageInput');
@@ -676,7 +785,7 @@
                    </svg>`;
         }
 
-        /* ── Loading state saat submit ── */
+        /* ── Loading state saat submit form profil ── */
         document.getElementById('profileForm').addEventListener('submit', function () {
             const btn     = document.getElementById('saveBtn');
             const spinner = document.getElementById('spinner');
@@ -685,6 +794,52 @@
             btn.disabled       = true;
             spinner.style.display = 'block';
             icon.style.display    = 'none';
+        });
+
+        /* ── logic pop up ── */
+        const addressModal = document.getElementById('addressModal');
+        const addressForm = document.getElementById('addressForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMethodContainer = document.getElementById('modalMethodContainer');
+
+        function openAddAddressModal() {
+            modalTitle.innerText = 'Tambahkan Alamat Baru';
+            addressForm.action = "{{ route('profile.address.save') }}"; // Arahkan ke route store kamu
+            modalMethodContainer.innerHTML = '@csrf'; // Hanya butuh token CSRF dasar
+            
+            addressForm.reset();
+            document.getElementById('modal_isDefault').checked = false;
+            addressModal.classList.add('active');
+        }
+
+        function closeAddressModal() {
+            addressModal.classList.remove('active');
+        }
+
+        // Handle trigger ketika klik tombol "Ubah" alamat
+        document.querySelectorAll('.btn-edit-address').forEach(button => {
+            button.addEventListener('click', function() {
+                modalTitle.innerText = 'Ubah Alamat Pengiriman';
+                const idAddress = this.getAttribute('data-id');
+                
+                // Menentukan endpoint URL update (sesuaikan dengan pattern routing laravel kamu)
+                addressForm.action = `/profile/address/${idAddress}`;
+                
+                // Masukkan directive CSRF & PUT Method spoofing ala Laravel
+                modalMethodContainer.innerHTML = '@csrf @method("PUT")';
+                
+                // Isi field modal form berdasarkan data properti item yang di klik
+                document.getElementById('modal_label').value = this.getAttribute('data-label');
+                document.getElementById('modal_receiver').value = this.getAttribute('data-receiver');
+                document.getElementById('modal_phone').value = this.getAttribute('data-phone');
+                document.getElementById('modal_completeAddress').value = this.getAttribute('data-complete');
+                document.getElementById('modal_city').value = this.getAttribute('data-city');
+                document.getElementById('modal_province').value = this.getAttribute('data-province');
+                document.getElementById('modal_postalCode').value = this.getAttribute('data-postal');
+                document.getElementById('modal_isDefault').checked = this.getAttribute('data-default') === '1';
+                
+                addressModal.classList.add('active');
+            });
         });
     </script>
 

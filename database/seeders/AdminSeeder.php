@@ -18,8 +18,11 @@ class AdminSeeder extends Seeder
 
         foreach ($adminUsers as $user) {
             // Buat data admin dengan menyamakan idAdmin dengan idUser
-            Admin::factory()->create([
-                'idAdmin' => $user->idUser,
+            // Lengkapi juga atribut division dan accessLevel sesuai kebutuhan sistem Anda
+            Admin::create([
+                'idAdmin'     => $user->idUser,
+                'division'    => 'Super Admin', 
+                'accessLevel' => 'Level 1'
             ]);
         }
     }

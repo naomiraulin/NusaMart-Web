@@ -166,7 +166,7 @@
 
                                         {{-- Quantity & hapus --}}
                                         <div class="flex items-center gap-2 flex-shrink-0">
-                                            <form action="{{ route('cart.remove', $cartItem->idCartItem) }}" method="POST"
+                                            <form action="{{ route('buyer.cart.remove', $cartItem->idCartItem) }}" method="POST"
                                                 onsubmit="return confirm('Hapus item ini dari keranjang?')">
                                                 @csrf
                                                 @method('DELETE')

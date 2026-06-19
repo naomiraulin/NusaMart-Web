@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Order\CheckoutRequest;
+use App\Http\Requests\Payment\ConfirmPaymentRequest;
 use App\Models\CartItem;
 use App\Models\CourierOption;
 use App\Models\PaymentMethod;
@@ -59,9 +60,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Halaman checkout.
-     * Menerima cart_item_ids[] via GET dari halaman cart.
-     * Item yang dipilih dikelompokkan per toko untuk ditampilkan di checkout.
+     * Halaman checkout (Dari Keranjang).
      */
     public function checkout(Request $request): View|RedirectResponse
     {
@@ -75,7 +74,6 @@ class OrderController extends Controller
                 ->with('error', 'Pilih minimal satu produk untuk checkout.');
         }
 
-        // Ambil CartItem yang dipilih, pastikan milik user ini
         $cart          = $this->cartService->getCart($user->idUser);
         $selectedItems = $cart->cartItems
             ->whereIn('idCartItem', $cartItemIds)
@@ -89,7 +87,6 @@ class OrderController extends Controller
         $addresses = UserAddress::where('idUser', $user->idUser)->get();
         $methods   = PaymentMethod::where('isActive', true)->get();
 
-        // Inject harga flat rate ke setiap CourierOption tanpa mengubah model/DB
         $courierPrices = self::COURIER_PRICES;
         $couriers = CourierOption::where('isActive', true)
             ->get()
@@ -133,7 +130,6 @@ class OrderController extends Controller
         $selectedItems = collect([$mockCartItem]);
         $cartItemIds = ['DIRECT'];
         
-        // Flag penanda untuk di Blade
         $isDirect = true; 
         $directItemId = $itemId;
         $directQty = $quantity;
@@ -159,7 +155,6 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         
-        // Validasi Manual
         $validated = $request->validate([
             'id_address' => 'required',
             'id_method'  => 'required',
@@ -173,7 +168,7 @@ class OrderController extends Controller
         $quantity = (int) $validated['direct_qty'];
         $storesData = $validated['stores'];
         $servicePrice = (float) ($validated['service_price'] ?? 0);
-        $storeData = reset($storesData); // Ambil data toko pertama (karena beli langsung pasti 1 toko)
+        $storeData = reset($storesData); 
 
         if (!isset($storeData['shipping_cost']) || $storeData['shipping_cost'] === '') {
             $storeData['shipping_cost'] = self::COURIER_PRICES[$storeData['id_courier']] ?? 0;
@@ -202,21 +197,13 @@ class OrderController extends Controller
             $this->notificationService->sendOrderNotif($user->idUser, $order->idOrder, 'PENDING');
         }
 
-        return redirect()->route('buyer.orders.show', $orders->first()->idOrder)
-            ->with('success', 'Pesanan berhasil dibuat!');
+        // REDIRECT KE HALAMAN PEMBAYARAN
+        return redirect()->route('buyer.orders.payment', $orders->first()->idOrder)
+            ->with('success', 'Pesanan berhasil dibuat! Silakan selesaikan pembayaran.');
     }
+
     /**
-     * Proses checkout: buat order(s) + satu payment.
-     *
-     * Request structure:
-     *   cart_item_ids[]          — item yang dibeli
-     *   id_address               — alamat pengiriman
-     *   id_method                — metode pembayaran
-     *   service_price            — biaya layanan (flat)
-     *   stores[{idStore}][id_store]
-     *   stores[{idStore}][id_courier]
-     *   stores[{idStore}][shipping_cost]
-     *   stores[{idStore}][buyer_note]
+     * Proses checkout: buat order(s) dari keranjang.
      */
     public function placeOrder(CheckoutRequest $request): RedirectResponse
     {
@@ -228,8 +215,6 @@ class OrderController extends Controller
         $storesData   = $validated['stores'];
         $servicePrice = (float) ($validated['service_price'] ?? 0);
 
-        // Resolve shipping_cost dari COURIER_PRICES kalau frontend tidak kirim
-        // (fallback safety — normalnya sudah dikirim via hidden input Alpine)
         foreach ($storesData as $idStore => &$storeData) {
             if (!isset($storeData['shipping_cost']) || $storeData['shipping_cost'] === '') {
                 $storeData['shipping_cost'] = self::COURIER_PRICES[$storeData['id_courier']] ?? 0;
@@ -237,7 +222,6 @@ class OrderController extends Controller
         }
         unset($storeData);
 
-        // Buat semua order (satu per toko) + satu payment, dalam satu transaksi
         $result = $this->orderService->checkoutMultiStore(
             userId:       $user->idUser,
             cartItemIds:  $cartItemIds,
@@ -249,27 +233,106 @@ class OrderController extends Controller
         $orders      = $result['orders'];
         $totalAmount = $result['grand_total'];
 
-        // Buat satu Payment untuk semua order
         $payment = $this->paymentService->create(
             userId:      $user->idUser,
             methodId:    $validated['id_method'],
             totalAmount: $totalAmount,
         );
 
-        // Hubungkan payment ke setiap order
         foreach ($orders as $order) {
             $order->update(['idPayment' => $payment->idPayment]);
             $this->notificationService->sendOrderNotif($user->idUser, $order->idOrder, 'PENDING');
         }
 
         if ($orders->count() === 1) {
-            return redirect()->route('buyer.orders.show', $orders->first()->idOrder)
-                ->with('success', 'Pesanan berhasil dibuat!');
+            // REDIRECT KE HALAMAN PEMBAYARAN
+            return redirect()->route('buyer.orders.payment', $orders->first()->idOrder)
+                ->with('success', 'Pesanan berhasil dibuat! Silakan selesaikan pembayaran.');
         }
 
         return redirect()->route('buyer.orders.index')
             ->with('success', 'Pesanan berhasil dibuat! Kamu memiliki ' . $orders->count() . ' pesanan baru.');
     }
+
+    /**
+     * -----------------------------------------------------------
+     * HALAMAN PEMBAYARAN (TRANSFER MANUAL KE REKENING PLATFORM)
+     * -----------------------------------------------------------
+     */
+
+    /**
+     * Menampilkan halaman instruksi pembayaran (info rekening + upload bukti)
+     */
+    public function payment(string $id): View|RedirectResponse
+    {
+        $order = $this->orderService->getById($id);
+
+        // Jika status bukan PENDING, berarti sudah dibayar/dibatalkan. Lempar kembali ke detail.
+        if ($order->orderStatus !== 'PENDING') {
+            return redirect()->route('buyer.orders.show', $id);
+        }
+
+        // Pastikan relasi payment dan method-nya ikut dimuat
+        $order->load(['payment.paymentMethod']);
+
+        return view('buyer.orders.payment', compact('order'));
+    }
+
+    /**
+     * Upload Bukti Transfer & Konfirmasi Pembayaran (Tanpa verifikasi admin)
+     * Begitu bukti diupload, status order & payment langsung dianggap lunas.
+     */
+    public function confirmPayment(ConfirmPaymentRequest $request, string $id): RedirectResponse
+    {
+        try {
+            $order = $this->orderService->getById($id);
+
+            if ($order->orderStatus !== 'PENDING') {
+                return redirect()->route('buyer.orders.show', $id);
+            }
+
+            // Simpan bukti transfer
+            $this->paymentService->uploadProof($order->idPayment, $request->file('proof_image'));
+
+            // Tanpa verifikasi admin: langsung dikonfirmasi begitu bukti diupload
+            $this->paymentService->confirm($order->idPayment);
+
+            return redirect()->route('buyer.orders.show', $id)
+                ->with('success', 'Bukti transfer berhasil dikirim. Pembayaran telah dikonfirmasi!');
+
+        } catch (\Exception $e) {
+            // Kalau error, akan muncul di layar
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Konfirmasi Pesanan COD (Bayar di Tempat)
+     * Tidak perlu upload bukti, karena pembayaran dilakukan saat barang diterima.
+     */
+    public function confirmCod(string $id): RedirectResponse
+    {
+        try {
+            $order = $this->orderService->getById($id);
+
+            if ($order->orderStatus !== 'PENDING') {
+                return redirect()->route('buyer.orders.show', $id);
+            }
+
+            // COD: pesanan langsung diproses, pembayaran ditagih saat barang diterima
+            $this->paymentService->confirm($order->idPayment);
+
+            return redirect()->route('buyer.orders.show', $id)
+                ->with('success', 'Pesanan dikonfirmasi! Pembayaran dilakukan saat barang diterima (COD).');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * -----------------------------------------------------------
+     */
 
     /**
      * Selesaikan pesanan (buyer konfirmasi terima barang).

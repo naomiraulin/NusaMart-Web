@@ -393,13 +393,30 @@
 
                     @elseif ($order->orderStatus === 'PROCESSED')
                         <p class="action-box-text">
-                            Pesanan sedang disiapkan. Input data pengiriman untuk melanjutkan ke tahap dikirim.
+                            Pesanan sedang disiapkan. Kurir pengiriman sudah dipilih pembeli saat checkout:
                         </p>
+
+                        @if ($order->shipping)
+                            <div style="background:#fff; border:1px solid #e5e7eb; border-radius:0.5rem; padding:0.7rem 0.9rem; margin-bottom:0.9rem; display:flex; align-items:center; justify-content:space-between;">
+                                <div>
+                                    <div style="font-size:0.85rem; font-weight:600; color:#1f2937;">{{ $order->shipping->courier?->courierName ?? '-' }}</div>
+                                    <div style="font-size:0.75rem; color:#9ca3af;">{{ $order->shipping->courier?->serviceType ?? '' }}</div>
+                                </div>
+                                <span style="font-size:0.8rem; font-weight:600; color:#008B81;">
+                                    Rp{{ number_format($order->shipping->shippingPrice, 0, ',', '.') }}
+                                </span>
+                            </div>
+                        @endif
+
                         <div class="action-row">
-                            <a href="{{ route('seller.orders.shipping.create', $order->idOrder) }}" class="btn btn-primary">
-                                <svg style="width:0.9rem;height:0.9rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/></svg>
-                                Input Pengiriman
-                            </a>
+                            <form action="{{ route('seller.orders.shipping.confirm', $order->idOrder) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <button type="submit" class="btn btn-primary">
+                                    <svg style="width:0.9rem;height:0.9rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Konfirmasi & Kirim
+                                </button>
+                            </form>
                         </div>
 
                     @elseif ($order->orderStatus === 'SHIPPED')

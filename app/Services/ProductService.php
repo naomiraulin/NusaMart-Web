@@ -229,4 +229,9 @@ class ProductService
             }
         }
     }
+
+    public function searchProducts(array $filters = []): LengthAwarePaginator
+    {
+        return $this->productRepository->findAll($filters);
+    }
 }

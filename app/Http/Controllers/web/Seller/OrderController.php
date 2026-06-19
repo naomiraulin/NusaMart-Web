@@ -77,41 +77,23 @@ class OrderController extends Controller
     }
 
     /**
-     * Form input data pengiriman.
+     * Konfirmasi pengiriman.
+     * Data shipping (kurir, dll) sudah dibuat sejak buyer checkout.
+     * Seller cukup klik konfirmasi -> generate resi & tanggal kirim, status order jadi SHIPPED.
      */
-    public function createShipping(string $orderId): View
+    public function confirmShipping(string $orderId): RedirectResponse
     {
-        $order    = $this->orderService->getById($orderId);
-        $couriers = \App\Models\CourierOption::where('isActive', true)->get();
-
-        return view('seller.orders.shipping', compact('order', 'couriers'));
-    }
-
-    /**
-     * Simpan data pengiriman & ubah status order ke SHIPPED.
-     */
-    public function storeShipping(Request $request, string $orderId): RedirectResponse
-    {
-        $request->validate([
-            'id_courier'     => ['required', 'string', 'exists:courier_options,idCourier'],
-            'shipping_price' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        $this->shippingService->create(
-            $orderId,
-            $request->input('id_courier'),
-            $request->input('shipping_price'),
-        );
+        $this->shippingService->confirm($orderId);
 
         $order = $this->orderService->getById($orderId);
         $this->notificationService->sendOrderNotif($order->idUser, $orderId, 'SHIPPED');
 
         return redirect()->route('seller.orders.show', $orderId)
-            ->with('success', 'Data pengiriman berhasil disimpan.');
+            ->with('success', 'Pengiriman berhasil dikonfirmasi.');
     }
 
     /**
-     * Update status pengiriman.
+     * Update status pengiriman (dari WAITING/PICKED_UP/IN_TRANSIT/dst).
      */
     public function updateShipping(UpdateShippingRequest $request, string $shippingId): RedirectResponse
     {

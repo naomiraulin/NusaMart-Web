@@ -58,25 +58,34 @@ class PaymentService
             $orders = \App\Models\Order::where('idPayment', $paymentId)->get();
 
             foreach ($orders as $order) {
+                // 1. Update status pesanan jadi PROCESSED
                 $this->orderRepository->updateStatus($order->idOrder, 'PROCESSED');
 
-                $wallet = $this->walletRepository->findByStore($order->idStore);
+                // 2. Cari dompet toko, kalau belum ada otomatis buatkan (KODE BARU DI SINI)
+                $wallet = \App\Models\StoreWallet::firstOrCreate(
+                    ['idStore' => $order->idStore],
+                    [
+                        'idWallet'           => app(\App\Services\IdGeneratorService::class)->generate('WAL', \App\Models\StoreWallet::class, 'idWallet'),
+                        'activeBalance'      => 0,
+                        'outstandingBalance' => 0,
+                    ]
+                );
 
-                if ($wallet) {
-                    $this->walletRepository->updateBalance(
-                        $wallet->idWallet,
-                        $wallet->activeBalance,
-                        $wallet->outstandingBalance + $order->grandTotal,
-                    );
+                // 3. Tambahkan saldo ke outstandingBalance (uang tertahan)
+                $this->walletRepository->updateBalance(
+                    $wallet->idWallet,
+                    $wallet->activeBalance,
+                    $wallet->outstandingBalance + $order->grandTotal,
+                );
 
-                    $this->walletRepository->addTransaction([
-                        'idWallet'     => $wallet->idWallet,
-                        'mutationType' => 'IN',
-                        'nominal'      => $order->grandTotal,
-                        'description'  => "Pembayaran order {$order->invoiceNumber}",
-                        'referenceId'  => $order->idOrder,
-                    ]);
-                }
+                // 4. Catat riwayat transaksinya
+                $this->walletRepository->addTransaction([
+                    'idWallet'     => $wallet->idWallet,
+                    'mutationType' => 'IN',
+                    'nominal'      => $order->grandTotal,
+                    'description'  => "Pembayaran order {$order->invoiceNumber}",
+                    'referenceId'  => $order->idOrder,
+                ]);
             }
 
             return $payment;
